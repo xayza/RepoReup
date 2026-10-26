@@ -1,10 +1,10 @@
-# Cài đặt và phát hành HaizFlow miễn phí trên Windows
+# Cài đặt và phát hành BeUp miễn phí trên Windows
 
 Phiên bản mục tiêu: **0.1.0**. Hướng dẫn cập nhật ngày 04/10/2026. Theo lựa chọn của chủ dự án: phát hành **unsigned**, không mua chứng chỉ Authenticode.
 
 ## 1. Bản hiện tại dùng vào việc gì?
 
-Bản `HaizFlow-0.1.0-DEVELOPMENT-Setup.exe` dùng để nghiệm thu nội bộ, **chưa ký số và chưa phải bản phát hành công khai**. Không đổi tên nó thành bản chính thức. Development dùng AppId riêng để không ghi đè đăng ký cài đặt của bản public.
+Bản `BeUp-0.1.0-DEVELOPMENT-Setup.exe` dùng để nghiệm thu nội bộ, **chưa ký số và chưa phải bản phát hành công khai**. Không đổi tên nó thành bản chính thức. Development dùng AppId riêng để không ghi đè đăng ký cài đặt của bản public.
 
 Các bằng chứng cuối đợt build được ghi trong `docs/installer-build-report-2026-10-04.vi.md`. Có thể xem log thô tại `build/installer-reports/` và `build/frozen-delta-reports/`.
 
@@ -17,13 +17,13 @@ Trước khi phát hành còn phải hoàn tất:
 
 ## 2. Cài thử và vị trí dữ liệu
 
-Chạy installer, chọn một thư mục local mà tài khoản Windows có quyền ghi, ví dụ `D:\Apps\HaizFlow-Test`. Không chọn gốc ổ đĩa, thư mục chứa dữ liệu khác, UNC/network drive hoặc junction. Không dùng thư mục của bản đang chạy. Bản cài không cần quyền administrator với thư mục phù hợp.
+Chạy installer, chọn một thư mục local mà tài khoản Windows có quyền ghi, ví dụ `D:\Apps\BeUp-Test`. Không chọn gốc ổ đĩa, thư mục chứa dữ liệu khác, UNC/network drive hoặc junction. Không dùng thư mục của bản đang chạy. Bản cài không cần quyền administrator với thư mục phù hợp.
 
 Bố cục dự kiến:
 
 ```text
-D:\Apps\HaizFlow-Test\
-  HaizFlow.exe                    launcher, mở app bằng tệp này
+D:\Apps\BeUp-Test\
+  BeUp.exe                    launcher, mở app bằng tệp này
   _internal\                     runtime riêng của launcher
   updater\                       updater độc lập
   versions\0.1.0\                Core bất biến và phụ thuộc
@@ -47,7 +47,7 @@ Với bản cũ dạng flat chưa có `update-layout.json`: không tự chuyển
 
 ### Thiết lập lần đầu cho người dùng
 
-1. Mở `HaizFlow.exe`. Cài mới mặc định tiếng Việt; lựa chọn tiếng Anh đã lưu được giữ khi cài lại. Kiểm tra CPU/GPU trong Cài đặt. GPU chỉ dùng khi máy/driver và engine tương thích. Nhận diện nhiều người nói vẫn CPU.
+1. Mở `BeUp.exe`. Cài mới mặc định tiếng Việt; lựa chọn tiếng Anh đã lưu được giữ khi cài lại. Kiểm tra CPU/GPU trong Cài đặt. GPU chỉ dùng khi máy/driver và engine tương thích. Nhận diện nhiều người nói vẫn CPU.
 2. Chọn thư mục lưu tài nguyên trước khi tải gói lớn; kiểm tra dung lượng trống.
 3. Cài engine/model cần dùng trong Gói tài nguyên. Ba engine frozen đã qua cài cache thực bằng manager của app (GPU qua ghép multipart), kiểm executable và dung lượng. Bản engineering vẫn thiếu địa chỉ engine phát hành, nên tải từ GitHub và pipeline đầy đủ trên máy mới chưa được nghiệm thu.
 4. Chỉ thêm Gemini key nếu dùng dịch Gemini; chỉ thêm Zernio key nếu đăng mạng xã hội. Đặt tên từng key, chọn key đang dùng và kiểm tra kết nối. Dấu chấm của Zernio thể hiện kết quả các API đọc được kiểm tra, không chứng minh đã đăng thành công hay mọi quyền ghi.
@@ -68,7 +68,7 @@ Các script có hai chế độ không ký khác nhau:
 - `-UnsignedRelease`: ứng viên công khai unsigned; vẫn bắt buộc source sạch, giấy phép được duyệt, catalog tài nguyên đầy đủ và các kiểm thử.
 - `-AllowUnsigned`: chỉ kiểm thử nội bộ. Installer phải dùng thêm `-EngineeringBuild`, AppId và tên DEVELOPMENT riêng. Không đổi tên file để giả thành release.
 
-`-UnsignedRelease` không được kết hợp với signing identity, `-AllowUnsigned`, `-AllowDirtyBuild` hay `-EngineeringBuild`. Tên bộ cài công khai là `HaizFlow-0.1.0-Setup.exe`, thống nhất cho cả bản có và chưa có chữ ký số. Trạng thái chữ ký được ghi trong release notes, hướng dẫn cài đặt và metadata. Hỗ trợ ký trong source vẫn được giữ như một lựa chọn tương lai, không phải điều kiện của hướng miễn phí.
+`-UnsignedRelease` không được kết hợp với signing identity, `-AllowUnsigned`, `-AllowDirtyBuild` hay `-EngineeringBuild`. Tên bộ cài công khai là `BeUp-0.1.0-Setup.exe`, thống nhất cho cả bản có và chưa có chữ ký số. Trạng thái chữ ký được ghi trong release notes, hướng dẫn cài đặt và metadata. Hỗ trợ ký trong source vẫn được giữ như một lựa chọn tương lai, không phải điều kiện của hướng miễn phí.
 
 SHA-256 giúp kiểm toàn vẹn file, **không thay chữ ký danh tính**. Bảo vệ tài khoản GitHub bằng 2FA/passkey, review quyền write/release, bảo vệ tag, dùng draft để nghiệm thu đủ assets rồi mới publish. Nếu tài khoản phát hành bị chiếm, checksum đăng trên cùng tài khoản không đủ bảo vệ.
 
@@ -79,7 +79,7 @@ Máy build cần Windows x64, Git, Python 3.13 x64, uv theo lock tooling và Inn
 Đặt repo, temp và cache trên ổ đủ chỗ. Build Core đã dùng môi trường độc lập `build/core-env`, không gom mọi package AI của `.venv` vào installer. Không tự nâng phiên bản dependency lúc build release.
 
 ```powershell
-Set-Location D:\Du-an\HaizFlow
+Set-Location D:\Du-an\BeUp
 New-Item -ItemType Directory -Force -Path build\tool-temp, build\cache\uv | Out-Null
 $env:TEMP = (Resolve-Path build\tool-temp).Path
 $env:TMP = $env:TEMP
@@ -154,19 +154,19 @@ Chỉ thực hiện khi source sạch, legal/resource gate đạt và version c�
 ```powershell
 git status --short
 .\scripts\build-exe.ps1 -CoreLayout `
-  -PythonExecutable D:\Du-an\HaizFlow\build\core-env\Scripts\python.exe `
+  -PythonExecutable D:\Du-an\BeUp\build\core-env\Scripts\python.exe `
   -UnsignedRelease
 
-.\scripts\build-bootstrap.ps1 -OutputDirectory D:\Du-an\HaizFlow\dist\bootstrap-public `
-  -PythonExecutable D:\Du-an\HaizFlow\build\core-env\Scripts\python.exe `
+.\scripts\build-bootstrap.ps1 -OutputDirectory D:\Du-an\BeUp\dist\bootstrap-public `
+  -PythonExecutable D:\Du-an\BeUp\build\core-env\Scripts\python.exe `
   -UnsignedRelease
 
 .venv\Scripts\python.exe scripts\assemble-versioned.py `
-  --core dist\HaizFlowCore --launcher dist\bootstrap-public\HaizFlow `
-  --updater dist\bootstrap-public\HaizFlowUpdater `
-  --output dist\HaizFlow-public --assets dist\release-assets-0.1.0
+  --core dist\BeUpCore --launcher dist\bootstrap-public\BeUp `
+  --updater dist\bootstrap-public\BeUpUpdater `
+  --output dist\BeUp-public --assets dist\release-assets-0.1.0
 
-.\scripts\build-installer.ps1 -ArtifactPath D:\Du-an\HaizFlow\dist\HaizFlow-public `
+.\scripts\build-installer.ps1 -ArtifactPath D:\Du-an\BeUp\dist\BeUp-public `
   -UnsignedRelease
 ```
 
@@ -174,13 +174,13 @@ git status --short
 
 ```powershell
 .\scripts\test-installer.ps1 `
-  -InstallerPath D:\Release\HaizFlow-0.1.0-Setup.exe `
+  -InstallerPath D:\Release\BeUp-0.1.0-Setup.exe `
   -AllowRegisteredInstall
 ```
 
-`AllowRegisteredInstall` chỉ dùng trong VM sạch; không dùng trên máy có HaizFlow production. Test tự cài vào đường dẫn có khoảng trắng, không tạo shortcut, chạy UI frozen, repair, gỡ, cài lại trên dữ liệu giữ lại và kiểm hash fixture. Vẫn cần test tương tác wizard/IME/DPI, cảnh báo từ file tải qua browser và pipeline với engine thật. Không truyền `RequireSignature` cho bản unsigned.
+`AllowRegisteredInstall` chỉ dùng trong VM sạch; không dùng trên máy có BeUp production. Test tự cài vào đường dẫn có khoảng trắng, không tạo shortcut, chạy UI frozen, repair, gỡ, cài lại trên dữ liệu giữ lại và kiểm hash fixture. Vẫn cần test tương tác wizard/IME/DPI, cảnh báo từ file tải qua browser và pipeline với engine thật. Không truyền `RequireSignature` cho bản unsigned.
 
-Cả Core, launcher, updater, engine, setup và uninstaller của HaizFlow sẽ không ký trong hướng này. Manifest/Full Core được tạo sau khi executable hoàn chỉnh; bất kỳ thay đổi bytes nào sau đó đều cần build lại metadata/hash/package/installer tương ứng. Không thay version hay bytes của một release đã công khai.
+Cả Core, launcher, updater, engine, setup và uninstaller của BeUp sẽ không ký trong hướng này. Manifest/Full Core được tạo sau khi executable hoàn chỉnh; bất kỳ thay đổi bytes nào sau đó đều cần build lại metadata/hash/package/installer tương ứng. Không thay version hay bytes của một release đã công khai.
 
 Launcher/updater mới có `BOOTSTRAP-INFO.json` và checksum riêng; assembly
 kiểm chúng cùng commit/phiên bản/chế độ build với Core. Không tái dùng thư mục
@@ -191,23 +191,23 @@ bằng tay để vượt kiểm tra. Build lại bootstrap từ cùng source s�
 
 Release đầu **0.1.0 chỉ có Full Core**. Chưa có phiên bản public trước đó thì không tạo delta giả để phát hành. Các bản 0.1.1/0.1.2 trong test frozen chỉ là fixture cục bộ, không đổi version app và không đưa lên release.
 
-Lưu nguyên `dist/HaizFlowCore` đã finalized của mỗi release ở archive nội bộ; gồm `BUILD-INFO.json`, `SHA256SUMS.txt`, licenses và mọi tệp. Không dùng thư mục `runtime`, không dùng Core đã chỉnh tay và không bỏ thư viện “ít dùng” khỏi baseline.
+Lưu nguyên `dist/BeUpCore` đã finalized của mỗi release ở archive nội bộ; gồm `BUILD-INFO.json`, `SHA256SUMS.txt`, licenses và mọi tệp. Không dùng thư mục `runtime`, không dùng Core đã chỉnh tay và không bỏ thư viện “ít dùng” khỏi baseline.
 
 Khi release thực kế tiếp là 0.1.1, sau khi build Core 0.1.1 sạch/unsigned:
 
 ```powershell
 .venv\Scripts\python.exe scripts\build-core-update.py `
-  --base D:\ReleaseArchive\0.1.0\HaizFlowCore `
-  --target dist\HaizFlowCore --output dist\delta-assets-0.1.1
+  --base D:\ReleaseArchive\0.1.0\BeUpCore `
+  --target dist\BeUpCore --output dist\delta-assets-0.1.1
 ```
 
 Assembly tạo Full; lệnh trên tạo delta cùng manifest. Tên updater yêu cầu:
 
 ```text
-HaizFlow-Core-0.1.1-windows-x64-full.zip
-HaizFlow-Core-0.1.1-windows-x64-full.manifest.json
-HaizFlow-Core-0.1.1-windows-x64-from-0.1.0.zip
-HaizFlow-Core-0.1.1-windows-x64-from-0.1.0.manifest.json
+BeUp-Core-0.1.1-windows-x64-full.zip
+BeUp-Core-0.1.1-windows-x64-full.manifest.json
+BeUp-Core-0.1.1-windows-x64-from-0.1.0.zip
+BeUp-Core-0.1.1-windows-x64-from-0.1.0.manifest.json
 ```
 
 Giữ Full trong mọi release để fallback. Delta chỉ cập nhật Core, **không cập nhật root launcher/updater hoặc engine/model**. Khi cần đổi protocol/bootstrap/layout, phát hành installer đầy đủ và kế hoạch tương thích riêng. Core mới có migration không rollback-safe không được lách manifest compatibility.
@@ -216,9 +216,9 @@ Updater kiểm nguồn GitHub repo cố định, metadata digest, SHA-256 packag
 
 ### Luồng cập nhật trong app
 
-- Nút **Phiên bản mới** trên thanh menu và **Cập nhật HaizFlow** trong Cài đặt mở cùng một cửa sổ trạng thái.
+- Nút **Phiên bản mới** trên thanh menu và **Cập nhật BeUp** trong Cài đặt mở cùng một cửa sổ trạng thái.
 - **Cập nhật** hỏi xác nhận phiên bản trước khi tải. Hủy hoặc Escape không tải và không đóng app.
-- Bản cài versioned gọi `HaizFlowUpdater.exe`: tải Full/Delta phù hợp, kiểm checksum và chuẩn bị Core riêng. Không mở trang web để thay thế thao tác cập nhật.
+- Bản cài versioned gọi `BeUpUpdater.exe`: tải Full/Delta phù hợp, kiểm checksum và chuẩn bị Core riêng. Không mở trang web để thay thế thao tác cập nhật.
 - Khi tải xong, app thông báo sẵn sàng; **Khởi động lại** hỏi xác nhận lần nữa và nhắc lưu thay đổi đang chỉnh sửa. Chỉ sau xác nhận mới cấp quyền kích hoạt và đóng Core.
 - Khi đang xử lý video, xuất video, nhập media hoặc cài gói, cập nhật bị chặn. Backend kiểm lại ngay lúc xác nhận; xác nhận cũ không được dùng cho phiên bản/trạng thái mới.
 - Lỗi tải/kiểm tra/kích hoạt được hiển thị; Core cũ không bị đóng nếu không ghi được yêu cầu kích hoạt. Khởi động bản mới lỗi sẽ rollback theo health check.
@@ -228,7 +228,7 @@ Updater kiểm nguồn GitHub repo cố định, metadata digest, SHA-256 packag
 Kiểm thử delta local:
 
 ```powershell
-.venv\Scripts\python.exe scripts\test-frozen-delta.py --artifact dist\HaizFlow-public --require-unsigned
+.venv\Scripts\python.exe scripts\test-frozen-delta.py --artifact dist\BeUp-public --require-unsigned
 ```
 
 Còn phải thử download qua GitHub release thật, gián đoạn/mạng yếu/ổ gần đầy và upgrade từ installer cũ trên VM. Kết quả fixture local không chứng minh toàn bộ hành trình mạng đã qua.
@@ -241,7 +241,7 @@ Chỉ sau khi tất cả gate và installer acceptance qua, bạn review/commit 
 
 Assets release v0.1.0 gồm:
 
-- `HaizFlow-0.1.0-Setup.exe` và `.exe.sha256`.
+- `BeUp-0.1.0-Setup.exe` và `.exe.sha256`.
 - Full Core ZIP và `.manifest.json` đúng tên.
 - Changelog/release notes: yêu cầu máy, resource downloads, vị trí dữ liệu, trạng thái unsigned/caveat SmartScreen và Smart App Control, giấy phép/limitations.
 - Có thể kèm checksum tổng, SBOM và evidence build; không kèm `.env`, API key, PFX, runtime, test fixtures hay installer DEVELOPMENT.
@@ -252,14 +252,14 @@ Các lệnh dưới **tạo/publish release bên ngoài**, chỉ chạy khi bạ
 gh auth login
 gh auth status
 gh release create v0.1.0 --repo MachHongHai/HaizFlow --verify-tag --draft `
-  --title 'HaizFlow 0.1.0' --notes-file docs\release-notes-0.1.0.md `
-  dist\installer\HaizFlow-0.1.0-Setup.exe `
-  dist\installer\HaizFlow-0.1.0-Setup.exe.sha256 `
-  dist\release-assets-0.1.0\HaizFlow-Core-0.1.0-windows-x64-full.zip `
-  dist\release-assets-0.1.0\HaizFlow-Core-0.1.0-windows-x64-full.manifest.json
+  --title 'BeUp 0.1.0' --notes-file docs\release-notes-0.1.0.md `
+  dist\installer\BeUp-0.1.0-Setup.exe `
+  dist\installer\BeUp-0.1.0-Setup.exe.sha256 `
+  dist\release-assets-0.1.0\BeUp-Core-0.1.0-windows-x64-full.zip `
+  dist\release-assets-0.1.0\BeUp-Core-0.1.0-windows-x64-full.manifest.json
 ```
 
-`docs/release-notes-0.1.0.md` phải viết theo kết quả nghiệm thu thực, không có sẵn chứng nhận production. Kiểm tra draft có đủ asset, verify digest phía GitHub, tên và nguồn thư viện đi kèm; trạng thái Authenticode của các executable HaizFlow sẽ là `NotSigned`. Kiểm tải/cài trên máy sạch là bước bổ sung cần ghi riêng, không được giả định đã qua. Nếu bật immutable releases, tải đủ assets **trước** publish; GitHub không cho thay assets/tag sau đó. Xem [quản lý release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) và [CLI create](https://cli.github.com/manual/gh_release_create).
+`docs/release-notes-0.1.0.md` phải viết theo kết quả nghiệm thu thực, không có sẵn chứng nhận production. Kiểm tra draft có đủ asset, verify digest phía GitHub, tên và nguồn thư viện đi kèm; trạng thái Authenticode của các executable BeUp sẽ là `NotSigned`. Kiểm tải/cài trên máy sạch là bước bổ sung cần ghi riêng, không được giả định đã qua. Nếu bật immutable releases, tải đủ assets **trước** publish; GitHub không cho thay assets/tag sau đó. Xem [quản lý release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) và [CLI create](https://cli.github.com/manual/gh_release_create).
 
 Khi đã chốt stable:
 

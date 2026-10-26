@@ -33,7 +33,7 @@ def verify(root: Path = ROOT, *, artifact: Path | None = None, public_release: b
         project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]
         if state.get("schema_version") != 1:
             errors.append("Unknown legal-state schema.")
-        active = "LicenseRef-HaizFlow-Source-Available-1.0"
+        active = "LicenseRef-BeUp-Source-Available-1.0"
         if state.get("active_source_license") != active or project.get("license") != active:
             errors.append("Active source license and project metadata differ.")
         if text_hash(root / "LICENSE") != state.get("active_license_sha256"):
@@ -120,7 +120,7 @@ def main(argv=None) -> int:
         for error in errors:
             print(error, file=sys.stderr)
         return 1
-    print("Legal documents are consistent. Active license: HaizFlow Source-Available 1.0. Not release clearance.")
+    print("Legal documents are consistent. Active license: BeUp Source-Available 1.0. Not release clearance.")
     return 0
 
 

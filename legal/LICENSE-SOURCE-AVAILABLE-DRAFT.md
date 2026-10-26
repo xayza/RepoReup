@@ -1,18 +1,18 @@
-# HaizFlow Source-Available License — DRAFT 1
+# BeUp Source-Available License — DRAFT 1
 
 **HISTORICAL DRAFT — NOT IN FORCE as this document.**
 The owner approved a reconciled bilingual source license on 2026-10-01.
 The root `LICENSE` is the active Source-Available 1.0 text, Vietnamese first.
 This earlier proposal is retained for comparison, not application terms.
 
-Proposed identifier: `LicenseRef-HaizFlow-Source-Available-1.0` (custom; not
+Proposed identifier: `LicenseRef-BeUp-Source-Available-1.0` (custom; not
 OSI-approved). Proposed licensor: Mach Hong Hai, only for rights he owns or is
 expressly authorized to license. Official repository:
 https://github.com/MachHongHai/HaizFlow. Contact: machhonghaipr@gmail.com.
 
 ## 1. Scope and precedence
 
-“Covered Work” means HaizFlow source, documentation and application code
+“Covered Work” means BeUp source, documentation and application code
 specifically identified in a future approved release's rights inventory as
 subject to this license. It excludes third-party libraries, codecs, models,
 checkpoints, fonts, icons and separately licensed contributions or assets.
@@ -44,12 +44,12 @@ outside the Service. Independent licenses may separately permit such conduct.
 
 You may download an authorized application release, install it and use it
 without paying the licensor. Personal, business and monetized video production
-are permitted under the HaizFlow permission. You need not request permission
+are permitted under the BeUp permission. You need not request permission
 from Mach Hong Hai for each upload to YouTube, TikTok, Facebook or another
 platform. This permission does not license other people's media, voices,
 music, trademarks or model outputs; their applicable rights still govern.
 
-HaizFlow claims no ownership in your input media, projects or generated
+BeUp claims no ownership in your input media, projects or generated
 videos merely because you used it. You may use, distribute and monetize
 content to the extent you hold the necessary rights. In particular, a
 NonCommercial model license is not overridden by this permission.
@@ -75,7 +75,7 @@ imposed on those components or on independently granted rights.
 
 Retain truthful authorship and applicable notices. Do not falsely claim
 authorship of another person's work or represent an unofficial build as an
-official HaizFlow release. No trademark license is granted beyond truthful
+official BeUp release. No trademark license is granted beyond truthful
 identification needed for permitted use. No assertion of a registered mark
 or exclusive worldwide trademark ownership is made. Name/logo use must not
 mislead users about origin, endorsement or publisher; statutory rights remain.

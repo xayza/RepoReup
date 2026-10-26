@@ -10,9 +10,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from haizflow.update.filesystem import atomic_json, no_links, sha256, version
-from haizflow.update.packages import generate, reconstruct
-from haizflow.update.state import Layout, provision
+from beup.update.filesystem import atomic_json, no_links, sha256, version
+from beup.update.packages import generate, reconstruct
+from beup.update.state import Layout, provision
 
 
 def finalize_root(output: Path):
@@ -44,12 +44,12 @@ def assemble(core: Path, launcher: Path, updater: Path, output: Path, assets: Pa
     finalizer.verify_installer_eligibility(core, engineering=engineering)
     info = json.loads((core / "BUILD-INFO.json").read_text(encoding="utf-8"))
     target = version(info["version"])
-    if info.get("entrypoint") != "HaizFlowCore.exe":
-        raise ValueError("Build a real HaizFlowCore executable with -CoreLayout; do not rename a flat build.")
+    if info.get("entrypoint") != "BeUpCore.exe":
+        raise ValueError("Build a real BeUpCore executable with -CoreLayout; do not rename a flat build.")
     bootstrap_spec = importlib.util.spec_from_file_location("bootstrap_finalize", ROOT / "scripts/finalize-bootstrap.py")
     bootstrap = importlib.util.module_from_spec(bootstrap_spec)
     bootstrap_spec.loader.exec_module(bootstrap)
-    for directory, executable in ((launcher, "HaizFlow.exe"), (updater, "HaizFlowUpdater.exe")):
+    for directory, executable in ((launcher, "BeUp.exe"), (updater, "BeUpUpdater.exe")):
         bootstrap.verify(directory, executable, source_commit=info["git_commit"],
                          version=target, engineering=engineering)
     no_links(output)

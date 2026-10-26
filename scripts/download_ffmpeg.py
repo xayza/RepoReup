@@ -67,7 +67,7 @@ def _download(url: str, destination: Path, expected_sha256: str) -> Path:
         or parsed.password
     ):
         raise RuntimeError(f"Refusing non-HTTPS or unapproved download source: {url}")
-    request = urllib.request.Request(url, headers={"User-Agent": "HaizFlow-build/1"})
+    request = urllib.request.Request(url, headers={"User-Agent": "BeUp-build/1"})
     print(f"Downloading {url}", flush=True)
     with urllib.request.urlopen(request, timeout=120) as response, destination.open("wb") as output:  # nosec B310
         if urllib.parse.urlsplit(response.geturl()).scheme.lower() != "https":
@@ -237,7 +237,7 @@ def main(argv=None) -> int:
     parser.add_argument("--source-archive", type=Path)
     parser.add_argument("--source-signature", type=Path)
     args = parser.parse_args(argv)
-    if MANIFEST_PATH.is_file() and json.loads(MANIFEST_PATH.read_text(encoding="utf-8")).get("variant") == "haizflow":
+    if MANIFEST_PATH.is_file() and json.loads(MANIFEST_PATH.read_text(encoding="utf-8")).get("variant") == "beup":
         raise RuntimeError("This checkout uses the source-built media runtime. Use scripts/ffmpeg/build-msys2.sh, collect-built-ffmpeg.py and install-built-ffmpeg.py; do not overwrite it with a vendor archive.")
     install(
         archive=args.archive,

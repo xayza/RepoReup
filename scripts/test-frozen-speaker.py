@@ -11,8 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from haizflow.core.bundled_models import MODEL_FILE
-from haizflow.update.filesystem import atomic_json, remove_owned, sha256
+from beup.core.bundled_models import MODEL_FILE
+from beup.update.filesystem import atomic_json, remove_owned, sha256
 
 
 def main():
@@ -31,17 +31,17 @@ def main():
     status = root / "status.json"
     request = root / "request.json"
     atomic_json(request, dict(protocol_version=1, context={"device": "cpu"}, operation="speaker_identification",
-        payload=dict(audio_path=str(ROOT / "src/haizflow/desktop/assets/voice_samples/omnivoice/omnivoice_female/en.mp3"),
+        payload=dict(audio_path=str(ROOT / "src/beup/desktop/assets/voice_samples/omnivoice/omnivoice_female/en.mp3"),
             model_directory=str(model_root), video_id="frozen-speaker-test",
             segments=[dict(start=0, end=4, text="Sample one"), dict(start=4, end=8, text="Sample two")]),
         response_path=str(response), status_path=str(status)))
     environment = os.environ.copy()
-    environment.update(HAIZFLOW_SMOKE_TEST="1", HAIZFLOW_HOME=str(root), RUNTIME_DATA_DIR=str(root / "data"),
-        HAIZFLOW_RESOURCE_ROOT=str(root / "resources"), HAIZFLOW_TMP_DIR=str(root / "tmp"),
+    environment.update(BEUP_SMOKE_TEST="1", BEUP_HOME=str(root), RUNTIME_DATA_DIR=str(root / "data"),
+        BEUP_RESOURCE_ROOT=str(root / "resources"), BEUP_TMP_DIR=str(root / "tmp"),
         TEMP=str(root), TMP=str(root))
     passed = False
     try:
-        result = subprocess.run([str(core / "HaizFlowCore.exe"), "--engine-worker", "--request", str(request)],
+        result = subprocess.run([str(core / "BeUpCore.exe"), "--engine-worker", "--request", str(request)],
             env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         if result.returncode or not response.is_file():

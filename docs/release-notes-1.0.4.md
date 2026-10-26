@@ -1,4 +1,4 @@
-# HaizFlow 1.0.4
+# BeUp 1.0.4
 
 [Tải bộ cài Windows](https://github.com/MachHongHai/HaizFlow/releases/download/v1.0.4/HaizFlow-1.0.4-Setup.exe)
 
@@ -22,6 +22,6 @@ Các bản **1.0.1, 1.0.2 và 1.0.3** có thể cập nhật trực tiếp lên 
 
 Sau cập nhật, mở **Gói tài nguyên** và cập nhật bộ xử lý **CPU 17 / GPU CUDA 19 / OCR 9** để nhận các sửa lỗi TTS và thư viện bảo mật. Không phải tải lại model. Giữ nguyên release cũ, dự án và cache hợp lệ.
 
-Để nhận tối ưu launcher, lưu công việc, đóng HaizFlow rồi cài **Setup 1.0.4** vào đúng thư mục cài hiện tại. Không xóa `runtime` hoặc dự án. Việc kiểm tra đầy đủ Core vẫn được giữ, nên tốc độ mở còn phụ thuộc ổ đĩa và phần mềm bảo vệ trên từng máy.
+Để nhận tối ưu launcher, lưu công việc, đóng BeUp rồi cài **Setup 1.0.4** vào đúng thư mục cài hiện tại. Không xóa `runtime` hoặc dự án. Việc kiểm tra đầy đủ Core vẫn được giữ, nên tốc độ mở còn phụ thuộc ổ đĩa và phần mềm bảo vệ trên từng máy.
 
 Windows 10/11 x64. Bản phát hành **chưa ký Authenticode**; Windows có thể cảnh báo hoặc chặn theo chính sách. Không tắt phần mềm bảo vệ. Giới hạn giấy phép, gồm checkpoint OmniVoice phi thương mại, vẫn áp dụng. Không thêm nhà cung cấp API dịch/TTS mới trong bản này.

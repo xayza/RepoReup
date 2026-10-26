@@ -1,6 +1,6 @@
 {
   "version": "8.1.2",
-  "variant": "haizflow",
+  "variant": "beup",
   "architecture": "windows-x64",
   "license": "GPL-3.0-or-later configured CLI build",
   "build_recipe": "scripts/ffmpeg/build-msys2.sh",
@@ -10,7 +10,7 @@
   "source_signature_sha256": "0a0963fccd70597838073f3e31b20f4a4d8cc2b5e577472c9a5a1f22624246f8",
   "ffmpeg_sha256": "4e5244d41e98a3d85667c21ddfd8428574b740f45ec0a07b38ce0b35e77fc270",
   "ffprobe_sha256": "a57f27ed3574ee23d08a89946f32e1aa87fd072b3665607d36af44cfcbad04b6",
-  "version_line": "ffmpeg version 8.1.2-haizflow Copyright (c) 2000-2026 the FFmpeg developers",
+  "version_line": "ffmpeg version 8.1.2-beup Copyright (c) 2000-2026 the FFmpeg developers",
   "required_configuration": [
     "--enable-gpl",
     "--enable-libass",

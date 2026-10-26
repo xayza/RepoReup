@@ -1,16 +1,16 @@
-# Kiến trúc HaizFlow
+# Kiến trúc BeUp
 
 [Tài liệu](README.vi.md) · [Repository](../README.vi.md) · [English](architecture.md)
 
-Tài liệu này mô tả ranh giới hệ thống, hướng dependency, persistence, artifact graph và execution model của ứng dụng desktop. Đối tượng đọc là contributor cần thay đổi HaizFlow mà không ghép UI với chi tiết xử lý media.
+Tài liệu này mô tả ranh giới hệ thống, hướng dependency, persistence, artifact graph và execution model của ứng dụng desktop. Đối tượng đọc là contributor cần thay đổi BeUp mà không ghép UI với chi tiết xử lý media.
 
 ## 1. Ranh giới hệ thống
 
-HaizFlow là ứng dụng Windows desktop. Main process chạy giao diện PySide6/Qt Quick và điều phối dữ liệu dự án local, model worker cùng FFmpeg process. Không có HaizFlow web backend, browser client hoặc hosted project database.
+BeUp là ứng dụng Windows desktop. Main process chạy giao diện PySide6/Qt Quick và điều phối dữ liệu dự án local, model worker cùng FFmpeg process. Không có BeUp web backend, browser client hoặc hosted project database.
 
 ```text
 QML desktop UI
-  -> HaizFlowController facade
+  -> BeUpController facade
   -> desktop controller chuyên trách
   -> service hoặc pipeline operation
   -> artifact thuộc dự án local
@@ -32,7 +32,7 @@ Mạng chỉ xuất hiện trong tính năng cụ thể: tải model đã kiểm
 ## 3. Phân lớp và hướng dependency
 
 ```text
-src/haizflow/
+src/beup/
   core/          runtime path, hardware policy, diagnostics, shared event
   desktop/       Qt bootstrap, QML facade, controller, model, presenter
     qml/         page, workspace, dialog, shared control
@@ -62,9 +62,9 @@ Dependency đi từ presentation vào application services: QML → facade/contr
 
 ## 4. Desktop composition
 
-`haizflow_desktop.py` cấu hình runtime boundary, chuyển vào `.venv` nếu có rồi mới import Qt. Nó không import framework suy luận hoặc khởi động engine. `Main.qml` là shell sống lâu, sở hữu route history, top bar, dialog toàn cục và activity strip. `RouteHost.qml` thay page mà không dựng lại shell.
+`beup_desktop.py` cấu hình runtime boundary, chuyển vào `.venv` nếu có rồi mới import Qt. Nó không import framework suy luận hoặc khởi động engine. `Main.qml` là shell sống lâu, sở hữu route history, top bar, dialog toàn cục và activity strip. `RouteHost.qml` thay page mà không dựng lại shell.
 
-`HaizFlowController` là singleton facade cho QML. Các controller chuyên trách sở hữu catalog/project, command, import, processing lifecycle, preview video, preview audio, download, publishing, setting, gói tài nguyên, kiểm tra cập nhật, smart warm-up và diagnostics. Danh sách lớn được expose bằng `QAbstractListModel`.
+`BeUpController` là singleton facade cho QML. Các controller chuyên trách sở hữu catalog/project, command, import, processing lifecycle, preview video, preview audio, download, publishing, setting, gói tài nguyên, kiểm tra cập nhật, smart warm-up và diagnostics. Danh sách lớn được expose bằng `QAbstractListModel`.
 
 `AppUpdateController` kiểm tra repository GitHub chính thức trên worker thread. Cập nhật giữ luồng bộ cài đầy đủ và các bước xác minh hiện có; không thêm delta updater.
 
@@ -72,13 +72,13 @@ Activity ngắn nằm ở status strip; raw log chỉ mở khi cần chẩn đo�
 
 ## 5. Dữ liệu dự án
 
-`project_store` sở hữu index và `.haizflow-project.json`; `video_store` sở hữu `video.json`, log, media path và checkpoint. ID là immutable identifier; folder name dễ đọc chỉ là nhãn.
+`project_store` sở hữu index và `.beup-project.json`; `video_store` sở hữu `video.json`, log, media path và checkpoint. ID là immutable identifier; folder name dễ đọc chỉ là nhãn.
 
 Schema dự án là v4; schema video là v19. Ghi metadata dùng interprocess lock, file tạm, `fsync` và atomic replace. Migration giữ bản sao schema cũ; schema tương lai chưa biết bị từ chối. Chi tiết tại [lưu trữ và xuất video](project-storage-export.md).
 
 ```text
 <project-name>--<short-id>/
-  .haizflow-project.json
+  .beup-project.json
   videos/
     <source-name>--<short-id>/
       video.json
@@ -187,7 +187,7 @@ runtime/
   tmp/
 ```
 
-Source mode có thể dùng `HAIZFLOW_HOME` để tạo cùng containment boundary.
+Source mode có thể dùng `BEUP_HOME` để tạo cùng containment boundary.
 
 Inventory lúc khởi động chỉ kiểm tra sự tồn tại và kích thước dự kiến; UI thread không hash checkpoint nhiều GiB.
 SHA-256 đầy đủ chạy khi cài, sửa chữa hoặc ngay trước lần load model cần tin cậy đầu tiên. Việc dọn thư mục cũ sau

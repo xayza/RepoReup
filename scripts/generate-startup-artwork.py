@@ -16,7 +16,7 @@ from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QImage,
 from PySide6.QtSvg import QSvgRenderer
 
 ROOT = Path(__file__).resolve().parents[1]
-BRANDING = ROOT / "src/haizflow/desktop/assets/branding"
+BRANDING = ROOT / "src/beup/desktop/assets/branding"
 
 
 def render(*, preview: Path | None = None) -> None:
@@ -41,7 +41,7 @@ def render(*, preview: Path | None = None) -> None:
     clip.addRoundedRect(logo_rectangle, 38, 38)
     painter.save()
     painter.setClipPath(clip)
-    logo = QImage(str(BRANDING / "haizflow-mark.png"))
+    logo = QImage(str(BRANDING / "beup-mark.png"))
     # The supplied mark has an opaque margin outside its rounded tile. Crop
     # the source tile and clip its corners while composing, not by editing it.
     painter.drawImage(logo_rectangle, logo, QRectF(96, 92, 1062, 1068))

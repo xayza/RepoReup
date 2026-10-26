@@ -9,8 +9,8 @@ Chủ dự án được hỏi có quyền phân phối các mẫu giọng previe
 branding đang đi kèm ứng dụng hay không, trước khi đưa chúng lên release
 công khai. Câu trả lời trực tiếp: **“Có, tôi có quyền phân phối”**.
 
-Phạm vi: `src/haizflow/desktop/assets/voice_samples` và
-`src/haizflow/desktop/assets/branding` tại thời điểm xác nhận. Không suy ra
+Phạm vi: `src/beup/desktop/assets/voice_samples` và
+`src/beup/desktop/assets/branding` tại thời điểm xác nhận. Không suy ra
 quyền đối với tài sản người dùng nhập, bên đóng góp chưa xác nhận hoặc
 mọi phiên bản/tài sản bổ sung sau này. Giấy phép độc lập của vendor, icon,
 font, runtime và model vẫn giữ nguyên.
@@ -24,7 +24,7 @@ thương mại”**.
 
 Model card tại revision `c5fdb5ccb189668d56333f77ba2629f4cd7535f4`
 phân biệt code Apache-2.0 với pretrained model CC-BY-NC. Giấy phép source
-HaizFlow và việc dùng ứng dụng miễn phí không ghi đè điều kiện checkpoint.
+BeUp và việc dùng ứng dụng miễn phí không ghi đè điều kiện checkpoint.
 Không coi lựa chọn này là cấp quyền dùng model/giọng tạo ra cho mục đích
 thương mại. Người dùng cần quyền phù hợp trước khi sử dụng thương mại.
 

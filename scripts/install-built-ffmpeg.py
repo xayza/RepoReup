@@ -20,7 +20,7 @@ def digest(path: Path) -> str:
 def validate(inputs: Path) -> dict:
     inputs = inputs.resolve()
     report = json.loads((inputs / "closure.json").read_text(encoding="utf-8"))
-    if report.get("variant") != "haizflow" or report.get("version") != "8.1.2":
+    if report.get("variant") != "beup" or report.get("version") != "8.1.2":
         raise ValueError("Unexpected media build identity.")
     for section, directory in (("binaries", "bin"), ("sources", "sources")):
         for row in report[section]:
@@ -61,7 +61,7 @@ def install(inputs: Path) -> None:
     source_rows = {row["file"]: row for row in report["sources"]}
     result = subprocess.run([str(binary_directory / "ffmpeg.exe"), "-version"], check=True,
                             capture_output=True, text=True, encoding="utf-8")
-    manifest = dict(version="8.1.2", variant="haizflow", architecture="windows-x64",
+    manifest = dict(version="8.1.2", variant="beup", architecture="windows-x64",
                     license="GPL-3.0-or-later configured CLI build",
                     build_recipe="scripts/ffmpeg/build-msys2.sh",
                     source_url="https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz",

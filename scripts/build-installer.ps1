@@ -14,15 +14,15 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $BuildMetadataPath = Join-Path $Root "build\release-metadata"
-$SetupIconPath = Join-Path $Root "src\haizflow\desktop\assets\branding\haizflow.ico"
-$BrandingMarkPath = Join-Path $Root "src\haizflow\desktop\assets\branding\haizflow-mark.png"
+$SetupIconPath = Join-Path $Root "src\beup\desktop\assets\branding\beup.ico"
+$BrandingMarkPath = Join-Path $Root "src\beup\desktop\assets\branding\beup-mark.png"
 $ArtworkDirectory = Join-Path $Root "build\installer-assets"
 $InstallerTempParent = [System.IO.Path]::GetFullPath((Join-Path $Root "build\installer-temp"))
 $InstallerTemp = [System.IO.Path]::GetFullPath((Join-Path $InstallerTempParent ([guid]::NewGuid().ToString("N"))))
 $PreviousTemp = $env:TEMP
 $PreviousTmp = $env:TMP
 if (!$ArtifactPath) {
-  $ArtifactPath = Join-Path $Root "dist\HaizFlow"
+  $ArtifactPath = Join-Path $Root "dist\BeUp"
 }
 $ArtifactPath = [System.IO.Path]::GetFullPath($ArtifactPath)
 if ($UnsignedRelease -and ($AllowUnsigned -or $EngineeringBuild -or $SignCertificatePath -or $SignCertificateThumbprint)) {
@@ -34,7 +34,7 @@ if ($AllowUnsigned -and !$EngineeringBuild) {
 if ($EngineeringBuild -and (!$AllowUnsigned -or $SignCertificatePath -or $SignCertificateThumbprint)) {
   throw "EngineeringBuild requires AllowUnsigned and no signing certificate."
 }
-if (!(Test-Path -LiteralPath (Join-Path $ArtifactPath "HaizFlow.exe") -PathType Leaf)) {
+if (!(Test-Path -LiteralPath (Join-Path $ArtifactPath "BeUp.exe") -PathType Leaf)) {
   throw "Verified frozen artifact is missing: $ArtifactPath"
 }
 
@@ -108,14 +108,14 @@ if (!$IsccExecutable) {
   throw "Inno Setup 6 (iscc.exe) is required. Install it, then rerun scripts\build-installer.ps1."
 }
 
-$InstallerScript = Join-Path $Root "installer\HaizFlow.iss"
+$InstallerScript = Join-Path $Root "installer\BeUp.iss"
 $InstallerOutputDirectory = if ($OutputDirectory) { [System.IO.Path]::GetFullPath($OutputDirectory) } else { Join-Path $Root "dist\installer" }
 $SignedBuild = [bool]($SignCertificatePath -or $SignCertificateThumbprint)
 # Signing status belongs in release metadata and documentation, not the public filename.
-$OutputBaseFilename = if ($EngineeringBuild) { "HaizFlow-$Version-DEVELOPMENT-Setup" } else { "HaizFlow-$Version-Setup" }
+$OutputBaseFilename = if ($EngineeringBuild) { "BeUp-$Version-DEVELOPMENT-Setup" } else { "BeUp-$Version-Setup" }
 $InstallerPath = Join-Path $InstallerOutputDirectory "$OutputBaseFilename.exe"
 $SigningEnvironment = @{}
-foreach ($Name in @("HAIZFLOW_SIGN_CERT_PATH", "HAIZFLOW_SIGN_THUMBPRINT", "HAIZFLOW_SIGN_TIMESTAMP")) {
+foreach ($Name in @("BEUP_SIGN_CERT_PATH", "BEUP_SIGN_THUMBPRINT", "BEUP_SIGN_TIMESTAMP")) {
   $SigningEnvironment[$Name] = [Environment]::GetEnvironmentVariable($Name, "Process")
 }
 try {
@@ -129,19 +129,19 @@ try {
   if ($SignedBuild) {
     $OwnExecutables = @((Join-Path $LegalArtifact $BuildInfo.entrypoint))
     if ($VersionedLayout) {
-      $OwnExecutables += @((Join-Path $ArtifactPath "HaizFlow.exe"), (Join-Path $ArtifactPath "updater\HaizFlowUpdater.exe"))
+      $OwnExecutables += @((Join-Path $ArtifactPath "BeUp.exe"), (Join-Path $ArtifactPath "updater\BeUpUpdater.exe"))
     }
     foreach ($Executable in $OwnExecutables) {
       $Signature = Get-AuthenticodeSignature -LiteralPath $Executable
       if ($Signature.Status -ne "Valid" -or !$Signature.TimeStamperCertificate) {
-        throw "Every HaizFlow executable must be validly signed and timestamped before assembly: $Executable"
+        throw "Every BeUp executable must be validly signed and timestamped before assembly: $Executable"
       }
     }
-    $env:HAIZFLOW_SIGN_CERT_PATH = $SignCertificatePath
-    $env:HAIZFLOW_SIGN_THUMBPRINT = $SignCertificateThumbprint
-    $env:HAIZFLOW_SIGN_TIMESTAMP = $TimestampServer
+    $env:BEUP_SIGN_CERT_PATH = $SignCertificatePath
+    $env:BEUP_SIGN_THUMBPRINT = $SignCertificateThumbprint
+    $env:BEUP_SIGN_TIMESTAMP = $TimestampServer
     $SigningScript = Join-Path $PSScriptRoot "sign-windows.ps1"
-    $SignToolArguments = @('/Shaizflow_release_sign=powershell.exe -NoProfile -ExecutionPolicy Bypass -File $q' + $SigningScript + '$q -FilePath $f')
+    $SignToolArguments = @('/Sbeup_release_sign=powershell.exe -NoProfile -ExecutionPolicy Bypass -File $q' + $SigningScript + '$q -FilePath $f')
   }
   if (Test-Path -LiteralPath $InstallerPath -PathType Leaf) {
     Remove-Item -LiteralPath $InstallerPath -Force
@@ -167,7 +167,7 @@ try {
     $SmokeId = [guid]::NewGuid().ToString()
     $SmokeDirectory = Join-Path $Root "build\installer-fixtures\$SmokeId"
     New-Item -ItemType Directory -Path $SmokeDirectory -Force | Out-Null
-    $SmokeName = "HaizFlow-$Version-SMOKE-$SmokeId-DEVELOPMENT-Setup"
+    $SmokeName = "BeUp-$Version-SMOKE-$SmokeId-DEVELOPMENT-Setup"
     $SmokeCompilerArguments = @($CompilerArguments | Where-Object { $_ -notlike '/DOutputBaseFilename=*' -and $_ -notlike '/O*' }) + @(
       "/DOutputBaseFilename=$SmokeName", "/O$SmokeDirectory", "/DSmokeAppId={{$SmokeId}")
     if ($EngineeringBuild) {

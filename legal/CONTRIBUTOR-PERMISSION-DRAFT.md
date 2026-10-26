@@ -12,7 +12,7 @@ attribution and a nonsecret permission reference in the rights inventory.
 Proposed grant: the contributor retains ownership and grants Mach Hong Hai a
 nonexclusive, worldwide, perpetual, royalty-free permission to reproduce,
 modify, build, use, distribute and sublicense the specifically identified
-contribution, including within official HaizFlow releases under the approved
+contribution, including within official BeUp releases under the approved
 source-available and application terms or other terms. The grant is irrevocable
 to the extent permitted by law, except for breach of this agreement. It does
 not grant rights in unlisted third-party material or require moral-rights

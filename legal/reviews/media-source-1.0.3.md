@@ -1,4 +1,4 @@
-# HaizFlow 1.0.3 — scoped technical packaging review
+# BeUp 1.0.3 — scoped technical packaging review
 
 Reviewer: Codex. Date: 2026-10-20 (Asia/Saigon). This is a scoped technical
 packaging review, not independent legal, ownership or patent certification.

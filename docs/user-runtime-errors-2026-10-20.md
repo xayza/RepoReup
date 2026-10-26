@@ -1,6 +1,6 @@
 # CPU metadata and flat-Core engine failures
 
-User reports concern HaizFlow 1.0.1; fixes below are source changes after 1.0.2,
+User reports concern BeUp 1.0.1; fixes below are source changes after 1.0.2,
 not a claim that existing installed binaries have been repaired.
 
 ## Reproduced failures
@@ -40,7 +40,7 @@ the upstream Cython BLAS/LAPACK hidden imports. CPU/CUDA engine smoke tests
 explicitly require the extension before model weights are loaded. RPC errors
 retain their technical cause and explain how to verify/reinstall the engine pack.
 
-For existing users, prefer the `HaizFlow-<version>-Setup.exe` installer rather
+For existing users, prefer the `BeUp-<version>-Setup.exe` installer rather
 than treating an update Core ZIP as the complete installer. Keep the current
 runtime/projects. For a SciPy error, verify and, if necessary, reinstall only the
 CPU engine in Resource Packs; installing system Python/pip is not a repair for

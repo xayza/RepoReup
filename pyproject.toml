@@ -3,11 +3,11 @@ requires = ["setuptools==84.1.0", "wheel==0.47.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "haizflow"
+name = "beup"
 version = "1.0.4"
 description = "Free desktop video translation, dubbing and automation for Windows"
 authors = [{name = "Mach Hong Hai", email = "machhonghaipr@gmail.com"}]
-license = "LicenseRef-HaizFlow-Source-Available-1.0"
+license = "LicenseRef-BeUp-Source-Available-1.0"
 license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "licenses/*"]
 requires-python = ">=3.13,<3.14"
 dependencies = [
@@ -62,21 +62,21 @@ ai-runtime = [
 ]
 
 [project.scripts]
-haizflow = "haizflow.desktop.main:main"
+beup = "beup.desktop.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 # Exact upstream source, used until this release is available on PyPI.
 # The lock verifier requires both the full commit URL and archive hash.
-[tool.haizflow.source-dependencies.edge-tts]
+[tool.beup.source-dependencies.edge-tts]
 version = "7.3.1"
 url = "https://github.com/rany2/edge-tts/archive/360fa8e1de354e1dda74c09bd695887d6a44df74.tar.gz"
 sha256 = "470d399a288b9ff9800988538ae31c99f06e589ec0ed67cb01141b29a005ab47"
 
 [tool.setuptools.package-data]
-"haizflow" = ["assets/fonts/Bangers-Regular.ttf"]
-"haizflow.desktop" = ["qml/*.qml", "qml/qmldir", "qml/icons/*.svg", "translations/*.qm", "translations/*.ts", "assets/branding/haizflow-mark.png", "assets/branding/haizflow.ico", "assets/voice_samples/**/*.mp3", "assets/voice_samples/samples.json"]
+"beup" = ["assets/fonts/Bangers-Regular.ttf"]
+"beup.desktop" = ["qml/*.qml", "qml/qmldir", "qml/icons/*.svg", "translations/*.qm", "translations/*.ts", "assets/branding/beup-mark.png", "assets/branding/beup.ico", "assets/voice_samples/**/*.mp3", "assets/voice_samples/samples.json"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cu128" }

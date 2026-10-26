@@ -20,12 +20,12 @@ tự chuyển một bản cài hoặc dữ liệu người dùng sang layout m�
 ## Kiến trúc và vùng sở hữu
 
 ```text
-HaizFlow/
-  HaizFlow.exe                   launcher độc lập
-  updater/HaizFlowUpdater.exe     updater độc lập
+BeUp/
+  BeUp.exe                   launcher độc lập
+  updater/BeUpUpdater.exe     updater độc lập
   update-layout.json             marker schema/product/layout cố định
   versions/
-    0.1.0/HaizFlowCore.exe
+    0.1.0/BeUpCore.exe
     0.1.0/_internal/...
     0.1.0/core-manifest.json
     0.1.0/core-complete.json
@@ -41,7 +41,7 @@ HaizFlow/
     update.lock, updater.lock, launcher.lock
 ```
 
-Install root suy ra từ đường dẫn executable versions/<semver>/HaizFlowCore.exe
+Install root suy ra từ đường dẫn executable versions/<semver>/BeUpCore.exe
 và marker được kiểm tra; không tin biến môi trường install-root ở frozen mode.
 Core root là version folder; bundle root là _MEIPASS; runtime là install/runtime.
 Resource root ngoài ổ đĩa do user chọn tiếp tục qua runtime/data/resource-storage.json.
@@ -75,15 +75,15 @@ không phải sandbox chống một local attacker có cùng quyền.
 
 ## Manifest và package
 
-Schema 1, product HaizFlow, stable, windows, x64; strict MAJOR.MINOR.PATCH.
+Schema 1, product BeUp, stable, windows, x64; strict MAJOR.MINOR.PATCH.
 Có target_version/base_version/package_type (full|delta), package_name/size/SHA,
 target_files/base_files, added_files/changed_files/removed_files,
 data_compatibility (project_schema/video_schema/rollback_safe/migration_before_health).
 Mỗi file: relative path, size, sha256. Manifest không chứa lệnh hoặc URL thực thi.
 
 Tên assets:
-- HaizFlow-Core-0.2.0-windows-x64-full.zip (+ .manifest.json thay .zip).
-- HaizFlow-Core-0.2.0-windows-x64-from-0.1.0.zip (+ .manifest.json).
+- BeUp-Core-0.2.0-windows-x64-full.zip (+ .manifest.json thay .zip).
+- BeUp-Core-0.2.0-windows-x64-from-0.1.0.zip (+ .manifest.json).
 
 Tệp không đổi vẫn copy, không hardlink, chỉ reuse sau hash verification. Không
 patch Core đang chạy. ZIP chỉ được chứa chính xác added+changed; kiểm tra cả
@@ -99,7 +99,7 @@ Công cụ local (không build/upload):
 # --base-version / --target-version nếu tên thư mục khác.
 ```
 Công cụ tạo full + delta, verify ZIP sau tạo, in bytes/percent tiết kiệm. Đầu ra
-đã tồn tại không bị ghi đè. Core fixture nhỏ chỉ cần HaizFlowCore.exe giả.
+đã tồn tại không bị ghi đè. Core fixture nhỏ chỉ cần BeUpCore.exe giả.
 
 Full fallback dùng cùng downloader và validation: không có delta cho base, base
 thiếu/sai hash, không có delta ZIP hoặc delta >=85% full. Full Core không phải

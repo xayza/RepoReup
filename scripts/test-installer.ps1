@@ -11,7 +11,7 @@ $InstallerPath = [System.IO.Path]::GetFullPath($InstallerPath)
 $ChecksumPath = "$InstallerPath.sha256"
 $SmokeParent = [System.IO.Path]::GetFullPath((Join-Path $Root "build\installer-smoke"))
 $SmokeRoot = [System.IO.Path]::GetFullPath((Join-Path $SmokeParent ([guid]::NewGuid().ToString("N"))))
-$InstallRoot = Join-Path $SmokeRoot "HaizFlow test install"
+$InstallRoot = Join-Path $SmokeRoot "BeUp test install"
 $ReportRoot = Join-Path $Root "build\installer-reports\$([System.IO.Path]::GetFileName($SmokeRoot))"
 $InstallLog = Join-Path $ReportRoot "install.log"
 $UninstallLog = Join-Path $ReportRoot "uninstall.log"
@@ -45,7 +45,7 @@ function Invoke-SmokeUninstall {
     "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", ('/LOG="' + $Log + '"')
   ) -Label "Uninstall smoke test"
   Assert-UserData
-  if ((Test-Path -LiteralPath (Join-Path $InstallRoot "HaizFlow.exe")) -or
+  if ((Test-Path -LiteralPath (Join-Path $InstallRoot "BeUp.exe")) -or
       (Test-Path -LiteralPath (Join-Path $InstallRoot "versions\$TestVersion"))) {
     throw "Uninstall left immutable application files behind."
   }
@@ -91,7 +91,7 @@ if (!$AllowRegisteredInstall) {
         '{799AE20D-E7A5-4D79-96DE-708E161BF32A}_is1')) {
       if (Test-Path -LiteralPath (Join-Path $RegistryRoot $Identity)) {
         if ([System.IO.Path]::GetFileName($InstallerPath) -notlike '*-SMOKE-*-DEVELOPMENT-Setup.exe') {
-          throw 'Existing HaizFlow installation detected. Use a separately compiled SmokeAppId fixture or a clean VM.'
+          throw 'Existing BeUp installation detected. Use a separately compiled SmokeAppId fixture or a clean VM.'
         }
       }
     }
@@ -122,7 +122,7 @@ try {
   $env:TMP = $SmokeTemp
   Invoke-SmokeInstall $InstallLog
 
-  $InstalledExecutable = Join-Path $InstallRoot "HaizFlow.exe"
+  $InstalledExecutable = Join-Path $InstallRoot "BeUp.exe"
   if (!(Test-Path -LiteralPath $InstalledExecutable -PathType Leaf)) {
     throw "Installer did not create the expected executable: $InstalledExecutable"
   }
@@ -161,8 +161,8 @@ try {
   $UninstallerPath = $Uninstaller.FullName
   if ($RequireSignature) {
     foreach ($Executable in @($UninstallerPath, $InstalledExecutable,
-        (Join-Path $InstallRoot "updater\HaizFlowUpdater.exe"),
-        (Join-Path $InstallRoot "versions\$TestVersion\HaizFlowCore.exe"))) {
+        (Join-Path $InstallRoot "updater\BeUpUpdater.exe"),
+        (Join-Path $InstallRoot "versions\$TestVersion\BeUpCore.exe"))) {
       $Signature = Get-AuthenticodeSignature -LiteralPath $Executable
       if ($Signature.Status -ne "Valid" -or !$Signature.TimeStamperCertificate) {
         throw "Installed signature is invalid or lacks a timestamp: $Executable"
@@ -179,7 +179,7 @@ try {
   }
   $StaleCoreFile = Join-Path $InstallRoot "versions\$TestVersion\repair-stale-fixture.txt"
   Set-Content -LiteralPath $StaleCoreFile -Value "Repair must remove this stale immutable file" -Encoding utf8
-  $CorruptQml = Join-Path $InstallRoot "versions\$TestVersion\_internal\haizflow\desktop\qml\Main.qml"
+  $CorruptQml = Join-Path $InstallRoot "versions\$TestVersion\_internal\beup\desktop\qml\Main.qml"
   Set-Content -LiteralPath $CorruptQml -Value "INTENTIONALLY CORRUPTED TEST UI" -Encoding utf8
   Invoke-SmokeInstall (Join-Path $ReportRoot "repair.log")
   if (Test-Path -LiteralPath $StaleCoreFile) { throw "Repair retained stale Core files." }

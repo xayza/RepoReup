@@ -4,8 +4,8 @@ Trạng thái: nền tảng source đã triển khai và kiểm thử; **chưa s
 
 ## 24 điểm bàn giao
 
-1. Giấy phép chính tại `LICENSE` đã chuyển sang `LicenseRef-HaizFlow-Source-Available-1.0`, tiếng Việt trước tiếng Anh theo phê duyệt chủ sở hữu.
-2. `NOTICE` ghi Mạch Hồng Hải là tác giả HaizFlow; thông báo độc lập của thành phần bên thứ ba vẫn được bảo toàn.
+1. Giấy phép chính tại `LICENSE` đã chuyển sang `LicenseRef-BeUp-Source-Available-1.0`, tiếng Việt trước tiếng Anh theo phê duyệt chủ sở hữu.
+2. `NOTICE` ghi Mạch Hồng Hải là tác giả BeUp; thông báo độc lập của thành phần bên thứ ba vẫn được bảo toàn.
 3. README, metadata, hồ sơ pháp lý và kiểm tra hash giấy phép đã đồng bộ; các bản dự thảo được giữ với trạng thái lịch sử, không có hiệu lực.
 4. About không còn đoạn khởi tạo, giấy phép và bên thứ ba; cửa sổ Bản quyền riêng có trong Cài đặt và menu `?`.
 5. Bootstrap chỉ dùng thư viện chuẩn Python; không import Qt hoặc thư viện AI.
@@ -31,9 +31,9 @@ Trạng thái: nền tảng source đã triển khai và kiểm thử; **chưa s
 
 ## Tệp tạo mới
 
-- `src/haizflow/update/`: `__init__.py`, `filesystem.py`, `manifest.py`, `packages.py`, `state.py`, `network.py`, `launcher.py`, `updater.py`.
-- `scripts/`: `make-delta.py`, `haizflow-launcher.py`, `haizflow-updater.py`.
-- `src/haizflow/desktop/qml/CopyrightDialog.qml`.
+- `src/beup/update/`: `__init__.py`, `filesystem.py`, `manifest.py`, `packages.py`, `state.py`, `network.py`, `launcher.py`, `updater.py`.
+- `scripts/`: `make-delta.py`, `beup-launcher.py`, `beup-updater.py`.
+- `src/beup/desktop/qml/CopyrightDialog.qml`.
 - `tests/test_delta_update.py`, `tests/qml/tst_AppUpdatePopup_2.qml`, `tests/qml/tst_CopyrightDialog.qml`.
 - `docs/updater-packaging-todo.md` và báo cáo này.
 

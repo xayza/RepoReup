@@ -1,14 +1,14 @@
 # Launcher/Updater packaging — chưa thực hiện
 
 1. Đóng gói ba executable độc lập bằng Python runtime riêng của từng onedir:
-   root HaizFlow.exe launcher, updater/HaizFlowUpdater.exe, versions/<version>/HaizFlowCore.exe.
+   root BeUp.exe launcher, updater/BeUpUpdater.exe, versions/<version>/BeUpCore.exe.
    Không dựa vào Python có sẵn trong máy user hoặc import code từ Core đang hỏng.
-2. Entry points source: scripts/haizflow-launcher.py, scripts/haizflow-updater.py;
+2. Entry points source: scripts/beup-launcher.py, scripts/beup-updater.py;
    cần Windows GUI wrapper hiển thị friendly recovery error (source hiện stderr).
    Launcher frozen suy root từ executable; updater nhận root/request token từ Core.
-3. Build Core bằng tooling riêng có tên HaizFlowCore; tạo full manifest/package
+3. Build Core bằng tooling riêng có tên BeUpCore; tạo full manifest/package
    với make-delta.py; stage initial Core bằng reconstruct; provision marker rồi
-   Layout.seed chỉ sau verify. Không rename dist/HaizFlow đang có rồi giả vờ đã build.
+   Layout.seed chỉ sau verify. Không rename dist/BeUp đang có rồi giả vờ đã build.
 4. Installer tương lai dùng shortcut vào launcher, không Core. Thay CloseApplications
    filter và ownership delete rules theo versions/updater, giữ runtime. Đánh giá
    explicit migration flat install sang versioned layout và quyền uninstall.

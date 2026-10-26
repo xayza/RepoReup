@@ -1,4 +1,4 @@
-# HaizFlow 1.0.2
+# BeUp 1.0.2
 
 [Tải bộ cài Windows](https://github.com/MachHongHai/HaizFlow/releases/download/v1.0.2/HaizFlow-1.0.2-Setup.exe)
 

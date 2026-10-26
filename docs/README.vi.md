@@ -1,11 +1,11 @@
-# Tài liệu HaizFlow
+# Tài liệu BeUp
 
 [Trang chính](../README.vi.md) · [Hướng dẫn sử dụng](user-guide.vi.md) · [English](README.md)
 
 ## Dành cho người dùng
 
-- [Cài đặt HaizFlow](install.vi.md): bộ cài, CPU/GPU, gói tài nguyên, API key và dữ liệu.
-- [Sử dụng HaizFlow](user-guide.vi.md): từ dự án đầu tiên đến phụ đề, giọng đọc và xuất video.
+- [Cài đặt BeUp](install.vi.md): bộ cài, CPU/GPU, gói tài nguyên, API key và dữ liệu.
+- [Sử dụng BeUp](user-guide.vi.md): từ dự án đầu tiên đến phụ đề, giọng đọc và xuất video.
 - [Trợ giúp](support.vi.md): quản lý gói, API key, dữ liệu và liên hệ hỗ trợ.
 
 ## Dành cho người phát triển và bảo trì
@@ -23,7 +23,7 @@ Các tài liệu dưới đây trình bày cách phần mềm được xây dự
 | [Rà soát ngày 04/10/2026](release-audit-2026-10-04.md) | xem kiểm tra đã qua và các điều kiện installer còn thiếu. |
 | [Rà soát giấy phép](licensing-review.md) | xem quyền hiện hành, dự thảo và các điều kiện pháp lý chưa giải quyết trước phát hành. |
 | [Lưu trữ và xuất video](project-storage-export.md) | phân biệt bản dựng do app quản lý và video lưu độc lập ngoài dự án. |
-| [Phát hành cập nhật](updates.md#phát-hành-bản-cập-nhật-haizflow) | đưa bản stable mới tới người dùng đã cài HaizFlow. |
+| [Phát hành cập nhật](updates.md#phát-hành-bản-cập-nhật-beup) | đưa bản stable mới tới người dùng đã cài BeUp. |
 | [Đóng góp](../CONTRIBUTING.vi.md) | gửi issue hoặc pull request có phạm vi rõ ràng. |
 | [Chính sách bảo mật](../SECURITY.vi.md) | báo lỗ hổng qua kênh riêng tư. |
 

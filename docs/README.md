@@ -1,11 +1,11 @@
-# HaizFlow documentation
+# BeUp documentation
 
 [Repository](../README.md) · [User guide](user-guide.md) · [Tiếng Việt](README.vi.md)
 
 ## For users
 
-- [Install HaizFlow](install.md): installer, CPU/GPU, resource packs, API keys and data.
-- [Use HaizFlow](user-guide.md): your first project, captions, voice and export.
+- [Install BeUp](install.md): installer, CPU/GPU, resource packs, API keys and data.
+- [Use BeUp](user-guide.md): your first project, captions, voice and export.
 - [Help](support.md): resource packs, API keys, data management and contacting support.
 
 ## For developers and maintainers

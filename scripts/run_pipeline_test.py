@@ -5,13 +5,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from haizflow.schemas.video import VideoConfig
-from haizflow.services.desktop_videos import create_desktop_video
-from haizflow.services import video_store
-from haizflow.pipeline.process_video import process_video_sync
+from beup.schemas.video import VideoConfig
+from beup.services.desktop_videos import create_desktop_video
+from beup.services import video_store
+from beup.pipeline.process_video import process_video_sync
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run one local HaizFlow pipeline smoke test.")
+    parser = argparse.ArgumentParser(description="Run one local BeUp pipeline smoke test.")
     parser.add_argument("--input", required=True, type=Path, help="Path to an MP4, MOV, or MKV input video.")
     parser.add_argument("--target-language", default="vi", help="Target language code: vi, en, or zh.")
     parser.add_argument("--voice", default="omnivoice:male", help="OmniVoice preset identifier.")

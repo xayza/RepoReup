@@ -26,14 +26,14 @@ def main():
     parent = ROOT / "build/resource-install-smoke"
     root = parent / uuid.uuid4().hex
     root.mkdir(parents=True)
-    os.environ.update(HAIZFLOW_SMOKE_TEST="1", HAIZFLOW_HOME=str(root),
-        RUNTIME_DATA_DIR=str(root / "data"), HAIZFLOW_RESOURCE_ROOT=str(root / "resources"),
-        MODELS_DIR=str(root / "resources/models"), HAIZFLOW_TMP_DIR=str(root / "tmp"),
+    os.environ.update(BEUP_SMOKE_TEST="1", BEUP_HOME=str(root),
+        RUNTIME_DATA_DIR=str(root / "data"), BEUP_RESOURCE_ROOT=str(root / "resources"),
+        MODELS_DIR=str(root / "resources/models"), BEUP_TMP_DIR=str(root / "tmp"),
         TEMP=str(root), TMP=str(root))
-    from haizflow.core.paths import engines_dir, resource_packages_dir, resource_storage_pointer_path
-    from haizflow.core.resource_archive import ArchivePart
-    from haizflow.services.resource_packs import ResourcePackDefinition, ResourcePackManager, ModelBootstrapCancelled
-    from haizflow.update.filesystem import atomic_json, no_links, remove_owned, sha256
+    from beup.core.paths import engines_dir, resource_packages_dir, resource_storage_pointer_path
+    from beup.core.resource_archive import ArchivePart
+    from beup.services.resource_packs import ResourcePackDefinition, ResourcePackManager, ModelBootstrapCancelled
+    from beup.update.filesystem import atomic_json, no_links, remove_owned, sha256
 
     results = []
     passed = False
@@ -116,7 +116,7 @@ def main():
                 # BEFORE exercising the real user move workflow. Production
                 # correctly rejects moves while an environment owns the root.
                 atomic_json(resource_storage_pointer_path(),dict(version=1,path=str(manager.storage_root)))
-                os.environ.pop("HAIZFLOW_RESOURCE_ROOT", None)
+                os.environ.pop("BEUP_RESOURCE_ROOT", None)
                 os.environ.pop("MODELS_DIR", None)
                 moved = manager.move_storage(root / "moved")
                 assert manager.storage_root == moved

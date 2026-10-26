@@ -134,7 +134,7 @@ def collect(msys: Path, build: Path, output: Path, *, engine: bool = False) -> d
         shutil.copy2(build / name, sources / name)
     recipe = "build-engine-msys2.sh" if engine else "build-msys2.sh"
     shutil.copy2(ROOT / "scripts/ffmpeg" / recipe, sources / recipe)
-    report = dict(schema=1, version="8.1.2", variant="haizflow-engine" if engine else "haizflow", architecture="windows-x64",
+    report = dict(schema=1, version="8.1.2", variant="beup-engine" if engine else "beup", architecture="windows-x64",
                   binaries=sorted(rows, key=lambda item: item["file"]),
                   sources=source_rows, packages={name: packages[name] for name in sorted(used)})
     (output / "closure.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

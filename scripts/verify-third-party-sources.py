@@ -14,7 +14,7 @@ def verify(root: Path = ROOT) -> None:
     manifest = json.loads((root / "runtime/third-party-sources-manifest.json").read_text(encoding="utf-8"))
     filename = manifest["file"]
     release = str(manifest.get("release_version") or "")
-    if not re.fullmatch(r"\d+\.\d+\.\d+", release) or filename != f"HaizFlow-{release}-ThirdPartySources.zip":
+    if not re.fullmatch(r"\d+\.\d+\.\d+", release) or filename != f"BeUp-{release}-ThirdPartySources.zip":
         raise ValueError("Unexpected source release identity.")
     if manifest["url"] != f"https://github.com/MachHongHai/HaizFlow/releases/download/v{release}/" + filename:
         raise ValueError("Corresponding sources must use the binary release channel.")

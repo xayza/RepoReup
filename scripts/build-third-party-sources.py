@@ -83,5 +83,5 @@ def build(output: Path) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
-    parser.add_argument("--output", type=Path, default=ROOT / f"dist/release-sources/HaizFlow-{version}-ThirdPartySources.zip")
+    parser.add_argument("--output", type=Path, default=ROOT / f"dist/release-sources/BeUp-{version}-ThirdPartySources.zip")
     build(parser.parse_args().output)

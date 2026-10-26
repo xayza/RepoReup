@@ -64,14 +64,14 @@ def package(artifact: Path, inputs: Path) -> dict:
     artifact, inputs = artifact.resolve(), inputs.resolve()
     if not artifact.is_relative_to(ROOT / "build/resource-engines"):
         raise ValueError("Native packaging is limited to generated engine artifacts.")
-    if not (artifact / "HaizFlowEngine.exe").is_file():
+    if not (artifact / "BeUpEngine.exe").is_file():
         raise ValueError("Frozen engine is missing.")
     manifest = json.loads((ROOT / "runtime/engine-ffmpeg-manifest.json").read_text(encoding="utf-8"))
     closure = inputs / "closure.json"
     if digest(closure) != manifest["closure_sha256"]:
         raise ValueError("Native backend source/binary inventory is not pinned.")
     report = json.loads(closure.read_text(encoding="utf-8"))
-    if report.get("variant") != "haizflow-engine":
+    if report.get("variant") != "beup-engine":
         raise ValueError("Only the separately built engine backend is permitted.")
     replacements = {}
     for row in report["binaries"]:

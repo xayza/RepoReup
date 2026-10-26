@@ -9,8 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from haizflow.update.filesystem import no_links, version
-from haizflow.update.packages import generate
+from beup.update.filesystem import no_links, version
+from beup.update.packages import generate
 
 
 def main():
@@ -25,14 +25,14 @@ def main():
     spec.loader.exec_module(finalizer)
     finalizer.verify_installer_eligibility(args.target, engineering=args.engineering)
     target = json.loads((args.target / "BUILD-INFO.json").read_text(encoding="utf-8"))
-    if target.get("entrypoint") != "HaizFlowCore.exe" or (args.target / "core-manifest.json").exists():
-        raise ValueError("Use the raw finalized dist/HaizFlowCore artifact, not an installed version tree.")
+    if target.get("entrypoint") != "BeUpCore.exe" or (args.target / "core-manifest.json").exists():
+        raise ValueError("Use the raw finalized dist/BeUpCore artifact, not an installed version tree.")
     base_version = None
     if args.base:
         no_links(args.base)
         finalizer.verify_manifest(args.base)
         base = json.loads((args.base / "BUILD-INFO.json").read_text(encoding="utf-8"))
-        if (base.get("application") != "HaizFlow" or base.get("entrypoint") != "HaizFlowCore.exe"
+        if (base.get("application") != "BeUp" or base.get("entrypoint") != "BeUpCore.exe"
                 or base.get("packaging") != "PyInstaller onedir"
                 or (base.get("git_dirty") and not args.engineering)
                 or (args.base / "runtime").exists() or (args.base / "update-state").exists()

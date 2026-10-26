@@ -41,15 +41,15 @@ try {
   $VersionResource = Join-Path $Work "bootstrap-version.txt"
   & $Python (Join-Path $PSScriptRoot "generate-version-resource.py") --output $VersionResource
   if ($LASTEXITCODE -ne 0) { throw "Bootstrap version resource generation failed." }
-  foreach ($Entry in @(@("HaizFlow", "haizflow-launcher.py"), @("HaizFlowUpdater", "haizflow-updater.py"))) {
+  foreach ($Entry in @(@("BeUp", "beup-launcher.py"), @("BeUpUpdater", "beup-updater.py"))) {
     & $Python -m PyInstaller --noconfirm --clean --windowed --onedir `
       --name $Entry[0] --distpath $OutputDirectory --workpath (Join-Path $Work $Entry[0]) `
       --specpath $Work --paths (Join-Path $Root "src") `
       --version-file $VersionResource `
-      --add-data "$(Join-Path $Root 'src\haizflow\desktop\assets\branding\haizflow.ico');." `
-      --add-data "$(Join-Path $Root 'src\haizflow\desktop\assets\branding\startup-splash.bmp');." `
+      --add-data "$(Join-Path $Root 'src\beup\desktop\assets\branding\beup.ico');." `
+      --add-data "$(Join-Path $Root 'src\beup\desktop\assets\branding\startup-splash.bmp');." `
       --exclude-module PySide6 --exclude-module torch --exclude-module numpy `
-      --icon (Join-Path $Root "src\haizflow\desktop\assets\branding\haizflow.ico") `
+      --icon (Join-Path $Root "src\beup\desktop\assets\branding\beup.ico") `
       (Join-Path $PSScriptRoot $Entry[1])
     if ($LASTEXITCODE -ne 0) { throw "Bootstrap build failed: $($Entry[0])" }
     if ($SignCertificateThumbprint -or $SignCertificatePath) {

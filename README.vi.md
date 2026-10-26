@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="src/haizflow/desktop/assets/branding/haizflow-mark.png" width="96" alt="Logo HaizFlow">
-  <h1>HaizFlow</h1>
+  <img src="src/beup/desktop/assets/branding/beup-mark.png" width="96" alt="Logo BeUp">
+  <h1>BeUp</h1>
   <p><strong>Ứng dụng miễn phí để tải, dịch, tạo phụ đề và lồng tiếng video trên Windows.</strong></p>
   <p><a href="https://github.com/MachHongHai/HaizFlow/releases/download/v1.0.4/HaizFlow-1.0.4-Setup.exe">Cài đặt</a> · <a href="docs/user-guide.vi.md">Hướng dẫn sử dụng</a> · <a href="docs/support.vi.md">Trợ giúp</a> · <a href="README.md">English</a></p>
 </div>
 
 ## Giới thiệu
 
-HaizFlow giúp bạn tải video, dịch nội dung, tạo phụ đề và lồng tiếng. Bạn có thể xử lý từng video hoặc hàng loạt, che phụ đề gốc và tạo giọng đọc cho video có nhiều người nói. Video sau khi xử lý có thể đăng lên mạng xã hội qua Zernio.
+BeUp giúp bạn tải video, dịch nội dung, tạo phụ đề và lồng tiếng. Bạn có thể xử lý từng video hoặc hàng loạt, che phụ đề gốc và tạo giọng đọc cho video có nhiều người nói. Video sau khi xử lý có thể đăng lên mạng xã hội qua Zernio.
 
 Ứng dụng có chế độ Tự động để chạy các bước bạn đã chọn và trình sửa Thủ công để kiểm tra, chỉnh lại phụ đề hoặc giọng đọc trước khi xuất video.
 
@@ -39,7 +39,7 @@ Xem trước video, chỉnh phụ đề và chọn giọng đọc phù hợp tr�
 
 Tìm dự án gần đây, lọc theo loại và tạo dự án mới.
 
-![Trang chủ HaizFlow với các thẻ dự án và bộ lọc tìm kiếm](docs/images/screenshots/home-2026-10-11.png)
+![Trang chủ BeUp với các thẻ dự án và bộ lọc tìm kiếm](docs/images/screenshots/home-2026-10-11.png)
 
 ### Xử lý tự động
 
@@ -83,7 +83,7 @@ Gemini, Zernio và các dịch vụ bên ngoài có điều khoản, hạn mức
 
 **[Tải bộ cài Windows](https://github.com/MachHongHai/HaizFlow/releases/download/v1.0.4/HaizFlow-1.0.4-Setup.exe).** Chỉ mở file EXE này; không cần tải hoặc giải nén các tệp Core. Bản 1.0.1, 1.0.2 và 1.0.3 có thể cập nhật trực tiếp trong app. Sau đó cập nhật bộ xử lý CPU/GPU trong Gói tài nguyên khi app yêu cầu; model và dự án đã có được giữ nguyên. Cài bộ Setup mới nếu muốn nhận thêm launcher khởi động đã tối ưu. [Thông tin phiên bản và cài đặt](https://github.com/MachHongHai/HaizFlow/releases/latest).
 
-1. Cài và mở HaizFlow. Giao diện mặc định là tiếng Việt.
+1. Cài và mở BeUp. Giao diện mặc định là tiếng Việt.
 2. Chọn CPU hoặc GPU NVIDIA trong **Cài đặt → Chung** và cài các gói cần dùng trong **Gói tài nguyên**.
 3. Tạo dự án **Tự động**, **Thủ công** hoặc **Hàng loạt**, rồi thêm video.
 4. Chọn ngôn ngữ, model và giọng đọc nếu cần. Chạy xử lý, kiểm tra kết quả rồi **Xuất** video.
@@ -96,9 +96,9 @@ Xem [hướng dẫn cài đặt](docs/install.vi.md) để chọn gói CPU/GPU, 
 
 ## Giấy phép và sử dụng thương mại
 
-HaizFlow miễn phí sử dụng theo [HaizFlow Source-Available 1.0](LICENSE). Đây không phải giấy phép nguồn mở OSI; điều kiện phân phối lại, đóng gói lại và kinh doanh phần mềm được quy định trong LICENSE.
+BeUp miễn phí sử dụng theo [BeUp Source-Available 1.0](LICENSE). Đây không phải giấy phép nguồn mở OSI; điều kiện phân phối lại, đóng gói lại và kinh doanh phần mềm được quy định trong LICENSE.
 
-**Model OmniVoice hiện tại chỉ được cấp phép cho mục đích phi thương mại.** Không mặc định dùng model này cho quảng cáo, video kiếm tiền hoặc công việc khách hàng khi chưa có quyền phù hợp. Giấy phép của HaizFlow không thay thế giấy phép model.
+**Model OmniVoice hiện tại chỉ được cấp phép cho mục đích phi thương mại.** Không mặc định dùng model này cho quảng cáo, video kiếm tiền hoặc công việc khách hàng khi chưa có quyền phù hợp. Giấy phép của BeUp không thay thế giấy phép model.
 
 Bạn cần có quyền sử dụng video, nhạc và mẫu giọng được đưa vào ứng dụng. Xem [NOTICE](NOTICE) và [thông báo thành phần bên thứ ba](THIRD_PARTY_NOTICES.md). [Hồ sơ giấy phép](docs/licensing-review.md) và [dự thảo không có hiệu lực](legal/LICENSE-SOURCE-AVAILABLE-DRAFT.md) được lưu riêng.
 
@@ -110,4 +110,4 @@ Xem [Trợ giúp](docs/support.vi.md) để quản lý tài nguyên, API key và
 
 Phần cài đặt từ mã nguồn, kiểm thử và đóng gói nằm trong [hướng dẫn phát triển](docs/development.vi.md). Xem [tài liệu kỹ thuật](docs/README.vi.md) nếu bạn muốn đóng góp mã.
 
-HaizFlow do **Mạch Hồng Hải** phát triển. Bạn có thể [đánh dấu sao repository](https://github.com/MachHongHai/HaizFlow) để theo dõi dự án.
+BeUp do **Mạch Hồng Hải** phát triển. Bạn có thể [đánh dấu sao repository](https://github.com/MachHongHai/HaizFlow) để theo dõi dự án.

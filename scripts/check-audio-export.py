@@ -5,12 +5,12 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from haizflow.config import TMP_DIR
-from haizflow.pipeline.audio_timeline import build_audio_timeline
-from haizflow.pipeline.extract_audio import extract_audio
-from haizflow.pipeline.render import render_video
-from haizflow.schemas.video import CropSettings, SubtitleStyle
-from haizflow.utils.ffmpeg import _binary
+from beup.config import TMP_DIR
+from beup.pipeline.audio_timeline import build_audio_timeline
+from beup.pipeline.extract_audio import extract_audio
+from beup.pipeline.render import render_video
+from beup.schemas.video import CropSettings, SubtitleStyle
+from beup.utils.ffmpeg import _binary
 
 
 def main():
@@ -58,7 +58,7 @@ def main():
             require_voice_parts=False,
         )
         subtitles = root / "subtitles.srt"
-        subtitles.write_text("1\n00:00:00,000 --> 00:00:01,500\nHaizFlow audio check\n", encoding="utf-8")
+        subtitles.write_text("1\n00:00:00,000 --> 00:00:01,500\nBeUp audio check\n", encoding="utf-8")
         output = root / "output.mp4"
         render_video(
             str(video),

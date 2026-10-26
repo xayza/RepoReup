@@ -45,7 +45,7 @@ network requests and did not solve a verification challenge.
 - Increasing the requested first-page size to 100 did not yield 100 videos.
   Do not raise body-size limits or change production page sizes based on that
   unproven workaround.
-- These trials locate the current refusal upstream of HaizFlow, including on
+- These trials locate the current refusal upstream of BeUp, including on
   the website's own anonymous requests. They do not prove a permanent universal
   anonymous limit, nor that every account/IP/time window behaves identically.
 - Existing partial-result notices, real server cursors, bounded retries,
@@ -63,5 +63,5 @@ Reference research (not a local acceptance result):
 
 The latter project also documents that unsigned-in web sessions expose only a
 limited public subset and uses an explicitly signed-in owned browser session.
-Neither repository constitutes evidence that HaizFlow can reliably obtain a
+Neither repository constitutes evidence that BeUp can reliably obtain a
 complete channel anonymously.

@@ -1,20 +1,20 @@
-# HaizFlow Application Terms — DRAFT 1
+# BeUp Application Terms — DRAFT 1
 
 **DRAFT — NOT IN FORCE.** These proposed terms are not the installer agreement.
 The current root `LICENSE` and independent component licenses remain in force.
 
-HaizFlow was created by Mach Hong Hai. Official downloads are linked from
+BeUp was created by Mach Hong Hai. Official downloads are linked from
 https://github.com/MachHongHai/HaizFlow/releases and https://haizflow.pages.dev/.
 
 1. **Free use.** You may install and run an authorized release without payment
    to its developer, for personal or business use, including commercial video
    creation. Optional API providers may charge fees under their separate terms.
-2. **Your content.** HaizFlow claims no ownership of your media or output merely
+2. **Your content.** BeUp claims no ownership of your media or output merely
    because it processed them. No per-video permission or royalty is required
-   by HaizFlow. Only use and publish media, music and voices for which you have
+   by BeUp. Only use and publish media, music and voices for which you have
    the necessary rights and consent. Model and service restrictions still apply.
 3. **Source and copies.** The approved source license governs access, internal
-   changes and redistribution of covered HaizFlow code. The proposed restricted
+   changes and redistribution of covered BeUp code. The proposed restricted
    license does not authorize mirroring, selling, rebranding or releasing its
    builds without separate permission. Prior licenses and independent rights
    are preserved; restrictions do not extend to separately licensed components.
@@ -38,4 +38,4 @@ https://github.com/MachHongHai/HaizFlow/releases and https://haizflow.pages.dev/
 
 Adoption requires approved text, an effective release and agreement presentation
 consistent with the source license. Installers display the active root LICENSE
-(now HaizFlow Source-Available 1.0); this draft must not replace LicenseFile.
+(now BeUp Source-Available 1.0); this draft must not replace LicenseFile.
