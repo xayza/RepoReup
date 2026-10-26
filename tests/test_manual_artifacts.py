@@ -10,9 +10,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from haizflow.pipeline import manual_tools
-from haizflow.pipeline.timing_contract import TIMING_SOURCE
-from haizflow.services import manual_artifacts
+from beup.pipeline import manual_tools
+from beup.pipeline.timing_contract import TIMING_SOURCE
+from beup.services import manual_artifacts
 
 
 class ManualArtifactTests(unittest.TestCase):
@@ -843,7 +843,7 @@ class ManualArtifactTests(unittest.TestCase):
         self.video.original_subtitle_removal_mode = "blur"
         self.video.crop = {"left_percent": 4, "right_percent": 4}
         self.video.output_format = "keep_ratio"
-        self.video.watermark_text = "HAIZFLOW"
+        self.video.watermark_text = "BEUP"
         self.video.original_video_volume = 36
         self.video.background_music_volume = 28
         self.video.tts_volume = 90
@@ -878,7 +878,7 @@ class ManualArtifactTests(unittest.TestCase):
         self.assertEqual(self.video.original_subtitle_removal_mode, "blur")
         self.assertEqual(self.video.crop, {"left_percent": 4, "right_percent": 4})
         self.assertEqual(self.video.output_format, "keep_ratio")
-        self.assertEqual(self.video.watermark_text, "HAIZFLOW")
+        self.assertEqual(self.video.watermark_text, "BEUP")
         self.assertEqual(self.video.original_video_volume, 36)
         self.assertEqual(self.video.background_music_volume, 28)
         self.assertEqual(self.video.tts_volume, 90)
@@ -955,11 +955,11 @@ class ManualToolDispatchTests(unittest.TestCase):
     def test_importing_manual_state_does_not_load_model_runtimes(self):
         script = """
 import sys
-import haizflow.pipeline.manual_tools
+import beup.pipeline.manual_tools
 blocked = {
-    'haizflow.pipeline.transcribe',
-    'haizflow.services.translation',
-    'haizflow.pipeline.subtitle_ocr',
+    'beup.pipeline.transcribe',
+    'beup.services.translation',
+    'beup.pipeline.subtitle_ocr',
 }
 assert not (blocked & set(sys.modules)), blocked & set(sys.modules)
 """
@@ -1093,7 +1093,7 @@ assert not (blocked & set(sys.modules)), blocked & set(sys.modules)
             patch.object(manual_tools.video_store, "get_video", return_value=video),
             patch.object(manual_tools.video_store, "update_video"),
             patch.object(manual_tools.video_store, "log_to_video"),
-            patch("haizflow.pipeline.process_video.ProgressReporter", return_value=reporter),
+            patch("beup.pipeline.process_video.ProgressReporter", return_value=reporter),
             patch.dict(manual_tools._RUNNERS, {"translation": runner}),
         ):
             manual_tools.run_manual_tool_sync(video.video_id, "translation")

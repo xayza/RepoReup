@@ -75,7 +75,7 @@ ApplicationWindow {
             videoSource: source, videoWidth: 640, videoHeight: 360,
             detectedRegion: {x_percent: 10, y_percent: 70, width_percent: 80, height_percent: 12}}, {});
     }
-}''', QUrl.fromLocalFile(str(directory / "src/haizflow/desktop/qml/SourceCoverTest.qml")))
+}''', QUrl.fromLocalFile(str(directory / "src/beup/desktop/qml/SourceCoverTest.qml")))
     assert component.isReady(), [e.toString() for e in component.errors()]
     window = component.create()
     assert window is not None

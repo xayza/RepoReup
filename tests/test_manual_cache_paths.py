@@ -8,8 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.pipeline import manual_tools
-from haizflow.services import manual_artifacts
+from beup.pipeline import manual_tools
+from beup.services import manual_artifacts
 
 
 @pytest.fixture
@@ -216,7 +216,7 @@ def test_redirect_below_cache_owner_is_still_rejected(aliased_workspace):
 
 
 def test_cancel_under_parent_alias_restores_paths_not_just_cache_references(aliased_workspace, monkeypatch):
-    from haizflow.services import processing_runs
+    from beup.services import processing_runs
 
     workspace, _, video = aliased_workspace
     for name, value in {"created_at": "2026-10-15T00:00:00Z", "files": {}, "checkpoints": {},

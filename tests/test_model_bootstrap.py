@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from haizflow.desktop.runtime_device_controller import RuntimeDeviceController
-from haizflow.services import model_bootstrap
+from beup.desktop.runtime_device_controller import RuntimeDeviceController
+from beup.services import model_bootstrap
 
 
 class _Response:

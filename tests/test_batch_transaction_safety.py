@@ -6,13 +6,13 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.desktop.localization import QMessageBox
-from haizflow.desktop.processing_lifecycle_controller import ProcessingLifecycleController
-from haizflow.desktop.project_commands_controller import ProjectCommandsController
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.pipeline import process_registry
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import batch_settings, project_store, video_store
+from beup.desktop.localization import QMessageBox
+from beup.desktop.processing_lifecycle_controller import ProcessingLifecycleController
+from beup.desktop.project_commands_controller import ProjectCommandsController
+from beup.desktop.qml_controller import BeUpController
+from beup.pipeline import process_registry
+from beup.schemas.video import VideoConfig
+from beup.services import batch_settings, project_store, video_store
 
 
 def make_video(identifier, **changes):
@@ -37,7 +37,7 @@ def test_batch_asset_undo_preflights_every_video_before_restoring_any(monkeypatc
         _processing_queue=SimpleNamespace(contains=lambda key: key == "busy"),
         _restore_video_asset_snapshot=restore)
     monkeypatch.setattr(video_store, "get_video", records.get)
-    assert not HaizFlowController._apply_batch_asset_snapshots(host, "batch", {"first": {}, "busy": {}}, {})
+    assert not BeUpController._apply_batch_asset_snapshots(host, "batch", {"first": {}, "busy": {}}, {})
     assert restored == []
 
 
@@ -88,7 +88,7 @@ def test_batch_pause_does_not_relabel_a_video_that_finished_during_detach(monkey
     monkeypatch.setattr(video_store, "update_video", updates)
     monkeypatch.setattr(video_store, "log_to_video", Mock())
     pause = Mock()
-    monkeypatch.setattr("haizflow.desktop.project_commands_controller.pause_video", pause)
+    monkeypatch.setattr("beup.desktop.project_commands_controller.pause_video", pause)
     ProjectCommandsController(host).stop_batch()
     updates.assert_not_called()
     pause.assert_not_called()
@@ -134,7 +134,7 @@ def test_batch_asset_history_rolls_back_partial_restore_failure(monkeypatch):
     monkeypatch.setattr(video_store, "get_video", records.get)
     save = Mock()
     monkeypatch.setattr(project_store, "save_batch_settings", save)
-    assert not HaizFlowController._apply_batch_asset_snapshots(
+    assert not BeUpController._apply_batch_asset_snapshots(
         host, "batch", {"first": {"volume": 12}, "second": {"volume": 12}}, {})
     assert records == original
     save.assert_not_called()
@@ -178,6 +178,6 @@ def test_batch_pause_preserves_completion_while_child_process_is_stopping(monkey
     monkeypatch.setattr(video_store, "get_video", lambda _: current)
     update = Mock()
     monkeypatch.setattr(video_store, "update_video", update)
-    monkeypatch.setattr("haizflow.desktop.project_commands_controller.pause_video", pause)
+    monkeypatch.setattr("beup.desktop.project_commands_controller.pause_video", pause)
     ProjectCommandsController(host).stop_batch()
     update.assert_not_called()

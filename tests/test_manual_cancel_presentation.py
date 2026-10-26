@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from haizflow.desktop.models import VideoListModel, presentation_video_status
-from haizflow.desktop.presenters import build_project_summaries
+from beup.desktop.models import VideoListModel, presentation_video_status
+from beup.desktop.presenters import build_project_summaries
 
 
 @pytest.mark.parametrize("kind,tool,detail,expected", [

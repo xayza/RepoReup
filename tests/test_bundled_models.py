@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from haizflow.core import bundled_models
-from haizflow.core.model_integrity import ModelIntegrityError
+from beup.core import bundled_models
+from beup.core.model_integrity import ModelIntegrityError
 
 
 def test_bundled_model_is_pinned_read_only_and_foreign_files_are_rejected(tmp_path):

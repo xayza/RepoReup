@@ -14,15 +14,15 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from haizflow.update.filesystem import (UpdateError, atomic_json, child, file_lock,
+from beup.update.filesystem import (UpdateError, atomic_json, child, file_lock,
                                        relative_path, remove_owned, sha256)
-from haizflow.update.launcher import CoreStillRunningError, launch
-from haizflow.update.manifest import Manifest, inventory
-from haizflow.update.network import API, GitHubClient, RedirectPolicy, allowed_url
-from haizflow.update.packages import generate, reconstruct
-from haizflow.update.state import Layout, provision
-from haizflow.update.updater import prepare_latest
-from haizflow.update.bootstrap import check_install, initialize, uninstall_cores
+from beup.update.launcher import CoreStillRunningError, launch
+from beup.update.manifest import Manifest, inventory
+from beup.update.network import API, GitHubClient, RedirectPolicy, allowed_url
+from beup.update.packages import generate, reconstruct
+from beup.update.state import Layout, provision
+from beup.update.updater import prepare_latest
+from beup.update.bootstrap import check_install, initialize, uninstall_cores
 
 
 class Interrupted(BaseException):
@@ -31,8 +31,8 @@ class Interrupted(BaseException):
 
 FAKE_CORE = """
 import json, os, pathlib, time
-root = pathlib.Path(os.environ['HAIZFLOW_BOOTSTRAP_ROOT'])
-attempt = os.environ['HAIZFLOW_HEALTH_ATTEMPT']
+root = pathlib.Path(os.environ['BEUP_BOOTSTRAP_ROOT'])
+attempt = os.environ['BEUP_HEALTH_ATTEMPT']
 request = json.loads((root/'update-state'/'ipc'/(attempt+'.request.json')).read_text())
 ack = dict(token=request['token'], version=request['version'], pid=os.getpid(), ready=True)
 (root/'update-state'/'ipc'/(attempt+'.ack.json')).write_text(json.dumps(ack))
@@ -62,7 +62,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.assertGreater(len(set(preparing)), 3)
 
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="haizflow-delta-test-")
+        self.temp = tempfile.TemporaryDirectory(prefix="beup-delta-test-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.base = self.root / "core-0.1.0"
@@ -70,7 +70,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.base.mkdir()
         self.target.mkdir()
         for directory, payload in ((self.base, b"old-core"), (self.target, b"new-core")):
-            (directory / "HaizFlowCore.exe").write_bytes(payload)
+            (directory / "BeUpCore.exe").write_bytes(payload)
             (directory / "_internal").mkdir()
             (directory / "_internal/same.dll").write_bytes(b"same-library" * 512)
         (self.base / "removed.dat").write_bytes(b"remove")
@@ -106,7 +106,7 @@ class DeltaUpdateTests(unittest.TestCase):
     def test_live_unconfirmed_core_does_not_roll_back(self):
         self.prepare()
         self.activate()
-        with patch("haizflow.update.launcher.start_core", side_effect=CoreStillRunningError("still running")):
+        with patch("beup.update.launcher.start_core", side_effect=CoreStillRunningError("still running")):
             with self.assertRaises(CoreStillRunningError):
                 launch(self.install, wait_for_exit=False)
         self.assertEqual(self.layout.active()["active"], "0.2.0")
@@ -198,7 +198,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.assertEqual(self.layout.journal()["state"], "confirmed")
 
     def test_interrupted_staging_recovery_keeps_old_core(self):
-        with patch("haizflow.update.state.reconstruct", side_effect=Interrupted):
+        with patch("beup.update.state.reconstruct", side_effect=Interrupted):
             with self.assertRaises(Interrupted):
                 self.prepare()
         with self.layout.lock():
@@ -267,7 +267,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.assertEqual(self.before, self.user_data())
 
     def test_disk_full_does_not_activate(self):
-        with patch("haizflow.update.packages.shutil.disk_usage", return_value=shutil._ntuple_diskusage(1, 1, 0)):
+        with patch("beup.update.packages.shutil.disk_usage", return_value=shutil._ntuple_diskusage(1, 1, 0)):
             with self.assertRaisesRegex(UpdateError, "dung lượng"):
                 self.prepare()
         self.assertEqual(self.layout.active()["active"], "0.1.0")
@@ -296,7 +296,7 @@ class DeltaUpdateTests(unittest.TestCase):
                 relative_path(name)
 
     def test_duplicate_and_case_collision_paths_rejected(self):
-        for name in ("HaizFlowCore.exe", "haizflowcore.exe", "HaizFlowCore.exe/child"):
+        for name in ("BeUpCore.exe", "beupcore.exe", "BeUpCore.exe/child"):
             data = copy.deepcopy(self.delta.data)
             data["target_files"].append(dict(data["target_files"][0], path=name))
             with self.subTest(name=name), self.assertRaises(UpdateError):
@@ -326,12 +326,12 @@ class DeltaUpdateTests(unittest.TestCase):
 
     def test_concurrent_launcher_never_starts_second_core(self):
         with file_lock(child(self.layout.state, "launcher.lock")), self.assertRaises(UpdateError), \
-                patch("haizflow.update.launcher.subprocess.Popen") as spawned:
+                patch("beup.update.launcher.subprocess.Popen") as spawned:
             launch(self.install, popen=spawned)
         spawned.assert_not_called()
 
     def test_missing_core_without_previous_gives_repair_error(self):
-        (self.layout.core("0.1.0") / "HaizFlowCore.exe").unlink()
+        (self.layout.core("0.1.0") / "BeUpCore.exe").unlink()
         with self.assertRaisesRegex(UpdateError, "Không có Core hợp lệ"):
             launch(self.install, command_for=self.fake_command)
         self.assertEqual(self.before, self.user_data())
@@ -345,9 +345,9 @@ class DeltaUpdateTests(unittest.TestCase):
         self.assertEqual(self.before, self.user_data())
 
     def test_same_size_corruption_is_rejected_before_spawning(self):
-        core = self.layout.core("0.1.0") / "HaizFlowCore.exe"
+        core = self.layout.core("0.1.0") / "BeUpCore.exe"
         core.write_bytes(b"X" * core.stat().st_size)
-        with patch("haizflow.update.launcher.subprocess.Popen") as spawned:
+        with patch("beup.update.launcher.subprocess.Popen") as spawned:
             with self.assertRaisesRegex(UpdateError, "Không có Core hợp lệ"):
                 launch(self.install, popen=spawned)
         spawned.assert_not_called()
@@ -357,7 +357,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.prepare()
         self.activate()
         self.assertEqual(launch(self.install, command_for=self.fake_command, timeout=3), 0)
-        core = self.layout.core("0.2.0") / "HaizFlowCore.exe"
+        core = self.layout.core("0.2.0") / "BeUpCore.exe"
         core.write_bytes(b"X" * core.stat().st_size)
         self.assertEqual(launch(self.install, command_for=self.fake_command, timeout=3), 0)
         self.assertEqual(self.layout.active()["active"], "0.1.0")
@@ -367,7 +367,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.prepare()
         self.activate()
         self.assertEqual(launch(self.install, command_for=self.fake_command, timeout=3), 0)
-        with patch("haizflow.update.launcher.start_core", side_effect=UpdateError("health timeout")) as started:
+        with patch("beup.update.launcher.start_core", side_effect=UpdateError("health timeout")) as started:
             with self.assertRaisesRegex(UpdateError, "health timeout"):
                 launch(self.install, command_for=self.fake_command)
         started.assert_called_once()
@@ -375,7 +375,7 @@ class DeltaUpdateTests(unittest.TestCase):
         self.assertEqual(self.layout.journal()["state"], "confirmed")
 
     def test_wrong_base_version_and_malformed_journal_do_not_change_active(self):
-        data = dict(self.delta.data, base_version="0.0.9", package_name="HaizFlow-Core-0.2.0-windows-x64-from-0.0.9.zip")
+        data = dict(self.delta.data, base_version="0.0.9", package_name="BeUp-Core-0.2.0-windows-x64-from-0.0.9.zip")
         with self.assertRaisesRegex(UpdateError, "Delta không hỗ trợ"):
             self.layout.prepare(self.output / self.delta.data["package_name"], Manifest.parse(data))
         self.layout.journal_path.write_text("[]")
@@ -417,22 +417,22 @@ class DeltaUpdateTests(unittest.TestCase):
         self.layout.validate_core("0.2.0")
 
     def test_independent_updater_waits_permission_and_actual_exit(self):
-        from haizflow.update.updater import create_request, run_request
+        from beup.update.updater import create_request, run_request
         token = create_request(self.layout, "0.2.0")
-        (self.install / "HaizFlow.exe").write_bytes(b"launcher fixture")
+        (self.install / "BeUp.exe").write_bytes(b"launcher fixture")
         atomic_json(child(self.layout.ipc, token + ".activate.json"), {"token": token, "activate": True})
-        with patch("haizflow.update.updater.prepare_latest", side_effect=lambda *_a, **_k: self.prepare()), \
-                patch("haizflow.update.updater.subprocess.Popen") as spawned:
+        with patch("beup.update.updater.prepare_latest", side_effect=lambda *_a, **_k: self.prepare()), \
+                patch("beup.update.updater.subprocess.Popen") as spawned:
             run_request(self.install, token, alive=lambda _: False, launch_process=spawned)
             spawned.assert_called_once()
         self.assertEqual(self.layout.journal()["state"], "pending_health")
         self.assertEqual(self.before, self.user_data())
 
     def test_independent_updater_defer_never_terminates_old_core(self):
-        from haizflow.update.updater import create_request, run_request
+        from beup.update.updater import create_request, run_request
         token = create_request(self.layout, "0.2.0")
-        with patch("haizflow.update.updater.prepare_latest", side_effect=lambda *_a, **_k: self.prepare()), \
-                patch("haizflow.update.updater.subprocess.Popen") as spawned:
+        with patch("beup.update.updater.prepare_latest", side_effect=lambda *_a, **_k: self.prepare()), \
+                patch("beup.update.updater.subprocess.Popen") as spawned:
             run_request(self.install, token, activation_timeout=0, launch_process=spawned)
             spawned.assert_not_called()
         self.assertEqual(self.layout.journal()["state"], "ready")
@@ -506,7 +506,7 @@ class DownloadTests(unittest.TestCase):
             client.latest()
 
     def test_asset_missing_digest_or_wrong_repo_is_rejected(self):
-        name = "HaizFlow-Core-0.2.0-windows-x64-full.zip"
+        name = "BeUp-Core-0.2.0-windows-x64-full.zip"
         asset = {"name": name, "size": 1, "state": "uploaded", "digest": "sha256:" + "1" * 64,
                  "browser_download_url": "https://github.com/MachHongHai/HaizFlow/releases/download/v0.2.0/" + name}
         client = GitHubClient()

@@ -11,12 +11,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from haizflow.pipeline import omnivoice_tts, process_registry, process_video
-from haizflow.pipeline.timing_contract import TIMING_SOURCE
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import manual_artifacts, processing_runs, project_store, video_export, video_store
-from haizflow.services.processing_queue import SerialProcessingQueue
-from haizflow.utils.ffmpeg import _binary, get_video_duration, validate_video_integrity
+from beup.pipeline import omnivoice_tts, process_registry, process_video
+from beup.pipeline.timing_contract import TIMING_SOURCE
+from beup.schemas.video import VideoConfig
+from beup.services import manual_artifacts, processing_runs, project_store, video_export, video_store
+from beup.services.processing_queue import SerialProcessingQueue
+from beup.utils.ffmpeg import _binary, get_video_duration, validate_video_integrity
 
 pytestmark = pytest.mark.filterwarnings("error::pytest.PytestUnhandledThreadExceptionWarning")
 
@@ -60,7 +60,7 @@ def simulation(tmp_path, monkeypatch, media):
     monkeypatch.setattr(process_video, "shutdown_hymt2_worker", lambda: None)
     monkeypatch.setattr(omnivoice_tts, "clear_runtime", lambda: None)
     # The renderer itself still runs, but never probes/uses the developer GPU.
-    monkeypatch.setattr("haizflow.pipeline.render.preferred_video_encoder",
+    monkeypatch.setattr("beup.pipeline.render.preferred_video_encoder",
                         lambda quality=23: ("libx264", ["-preset", "ultrafast", "-threads", "1", "-crf", str(quality)]))
     project = project_store.create_project("Batch mô phỏng", str(tmp_path / "projects"), "batch")
     external = tmp_path / "user-exports"

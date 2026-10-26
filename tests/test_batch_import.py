@@ -11,7 +11,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from haizflow.desktop.qml_controller import HaizFlowController
+from beup.desktop.qml_controller import BeUpController
 
 
 class BatchImportTests(unittest.TestCase):
@@ -27,7 +27,7 @@ class BatchImportTests(unittest.TestCase):
             nested.mkdir()
             (nested / "nested.mp4").touch()
 
-            valid_paths, invalid_names = HaizFlowController._collect_batch_video_paths(
+            valid_paths, invalid_names = BeUpController._collect_batch_video_paths(
                 [str(folder), str(folder / "a.mp4"), str(folder / "missing.mp4")]
             )
 
@@ -40,7 +40,7 @@ class BatchImportTests(unittest.TestCase):
     def test_rejected_file_report_lists_items_in_current_language(self):
         controller = SimpleNamespace(_settings_language="vi")
 
-        message = HaizFlowController._batch_rejection_message(
+        message = BeUpController._batch_rejection_message(
             controller,
             ["notes.txt", "audio.wav"],
         )

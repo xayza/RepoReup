@@ -7,12 +7,12 @@ from urllib.error import HTTPError
 
 import pytest
 
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.pipeline import manual_tools, process_video
-from haizflow.schemas.video import VideoConfig, VideoInfo
-from haizflow.services import batch_settings, gemini_context, project_store, translation, video_export, video_store
-from haizflow.services import gemini_translation as gemini
-from haizflow.services.processing_resume import configuration_snapshot
+from beup.desktop.qml_controller import BeUpController
+from beup.pipeline import manual_tools, process_video
+from beup.schemas.video import VideoConfig, VideoInfo
+from beup.services import batch_settings, gemini_context, project_store, translation, video_export, video_store
+from beup.services import gemini_translation as gemini
+from beup.services.processing_resume import configuration_snapshot
 
 
 @pytest.fixture
@@ -195,7 +195,7 @@ def test_context_is_bounded_and_excludes_the_sentences_being_repaired():
 def test_guidance_dialog_cannot_save_into_another_or_queued_video(owner, queued):
     host = SimpleNamespace(_selected_project_key="project", _selected_video_id="a",
                            _processing_queue=SimpleNamespace(contains=lambda _: queued))
-    assert not HaizFlowController.saveGeminiTranslationGuidance(host, "project", owner, "new", "rules")
+    assert not BeUpController.saveGeminiTranslationGuidance(host, "project", owner, "new", "rules")
 
 
 @pytest.mark.parametrize("saved", [True, False])
@@ -207,7 +207,7 @@ def test_guidance_save_trims_persists_and_restores_draft_on_failure(saved):
         _gemini_translation_style="literal",
         persistVideoSettingsFor=Mock(return_value=saved), _show_app_alert=Mock(),
         geminiGuidanceChanged=SimpleNamespace(emit=Mock()))
-    assert HaizFlowController.saveGeminiTranslationGuidance(host, "project", "a", " new ", " rules ", "natural") == saved
+    assert BeUpController.saveGeminiTranslationGuidance(host, "project", "a", " new ", " rules ", "natural") == saved
     host.persistVideoSettingsFor.assert_called_once_with("a")
     assert (host._gemini_translation_instructions, host._gemini_translation_glossary) == (
         ("new", "rules") if saved else ("before", "old rules"))
@@ -273,7 +273,7 @@ def test_editing_guidance_preserves_published_voice_subtitles_and_recognition(mo
     update, deactivate = Mock(), Mock()
     monkeypatch.setattr(video_store, "update_video", update)
     monkeypatch.setattr(manual_tools.manual_artifacts, "deactivate", deactivate)
-    HaizFlowController._apply_config_to_video(SimpleNamespace(), video, config)
+    BeUpController._apply_config_to_video(SimpleNamespace(), video, config)
     deactivate.assert_called_once_with("a", {"translation"})
     changes = update.call_args.kwargs
     assert changes["gemini_translation_instructions"] == "New context"

@@ -8,11 +8,11 @@ import numpy as np
 import pytest
 from PySide6.QtGui import QGuiApplication
 
-from haizflow.desktop.manual_preview_audio_controller import ManualPreviewAudioController
-from haizflow.desktop.manual_subtitle_model import identify_segments
-from haizflow.schemas.editor import EditorClip, EditorDocument, EditorSequence, EditorTrack
-from haizflow.services import editor_documents
-from haizflow.services.subtitle_identity import voice_source_indices
+from beup.desktop.manual_preview_audio_controller import ManualPreviewAudioController
+from beup.desktop.manual_subtitle_model import identify_segments
+from beup.schemas.editor import EditorClip, EditorDocument, EditorSequence, EditorTrack
+from beup.services import editor_documents
+from beup.services.subtitle_identity import voice_source_indices
 
 
 @pytest.fixture
@@ -133,13 +133,13 @@ def test_preview_decodes_correct_legacy_parts_after_merge_and_delete(legacy_edit
     audio._executor.shutdown(wait=False, cancel_futures=True)
     results = []
     audio._executor = SimpleNamespace(submit=lambda callback: (results.append(callback()) or Mock()), shutdown=Mock())
-    monkeypatch.setattr("haizflow.services.video_store.get_video_dir", lambda _: str(tmp_path))
+    monkeypatch.setattr("beup.services.video_store.get_video_dir", lambda _: str(tmp_path))
     monkeypatch.setattr(editor_documents, "load", lambda _: document)
-    monkeypatch.setattr("haizflow.pipeline.manual_tools.published_voice_record", lambda *_args, **_kwargs: published)
-    monkeypatch.setattr("haizflow.pipeline.manual_tools.published_voice_source_segments",
+    monkeypatch.setattr("beup.pipeline.manual_tools.published_voice_record", lambda *_args, **_kwargs: published)
+    monkeypatch.setattr("beup.pipeline.manual_tools.published_voice_source_segments",
                         lambda *_args, **_kwargs: source)
-    monkeypatch.setattr("haizflow.pipeline.manual_tools._voice_manifest_payload", lambda _: {})
-    monkeypatch.setattr("haizflow.pipeline.manual_tools._audio_background", lambda *_args, **_kwargs: ("", "", []))
+    monkeypatch.setattr("beup.pipeline.manual_tools._voice_manifest_payload", lambda _: {})
+    monkeypatch.setattr("beup.pipeline.manual_tools._audio_background", lambda *_args, **_kwargs: ("", "", []))
     decoded = []
     monkeypatch.setattr(audio, "_decode", lambda path, *_args, **_kwargs:
                         (decoded.append(path) or np.ones((480, 2), dtype=np.int16)))

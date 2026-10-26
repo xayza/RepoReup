@@ -7,11 +7,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.pipeline import manual_tools
-from haizflow.schemas.video import VideoConfig, VideoInfo
-from haizflow.services import editor_documents, manual_artifacts, video_store
-from haizflow.services.subtitle_identity import voice_source_indices
+from beup.desktop.qml_controller import BeUpController
+from beup.pipeline import manual_tools
+from beup.schemas.video import VideoConfig, VideoInfo
+from beup.services import editor_documents, manual_artifacts, video_store
+from beup.services.subtitle_identity import voice_source_indices
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def voice_project(tmp_path, monkeypatch):
     monkeypatch.setattr(manual_tools, "ensure_narrator_anchor", lambda _: "stable narrator")
     monkeypatch.setattr(manual_tools, "shutdown_hymt2_worker", Mock())
     monkeypatch.setattr(manual_tools, "_release_recognition_runtime", Mock())
-    monkeypatch.setattr("haizflow.core.memory.cpu_memory_constrained", lambda: False)
+    monkeypatch.setattr("beup.core.memory.cpu_memory_constrained", lambda: False)
     requests = []
     def synthesize(segments_path, parts_dir, _voice, _id, **kwargs):
         segments = json.loads(Path(segments_path).read_text(encoding="utf-8"))
@@ -146,14 +146,14 @@ def test_full_voice_dialog_routes_a_subtitle_edit_to_incremental_processing(voic
     manual_tools.publish_edited_subtitles(video.video_id, edited)
     host = SimpleNamespace(_project_type="manual", _selected_video=lambda: video,
         _processing_queue=SimpleNamespace(contains=lambda _: False),
-        _normalized_tts_provider=HaizFlowController._normalized_tts_provider,
+        _normalized_tts_provider=BeUpController._normalized_tts_provider,
         _normalized_voice_for_language=lambda _lang, value, _provider: value,
         _manual_subtitles=SimpleNamespace(video_id=video.video_id, segments=edited),
         voiceCloneReferencePath="", appAlertRequested=Mock(), ttsProviderChanged=Mock(), ttsVoiceChanged=Mock(),
         ttsProviderOptionsChanged=Mock(), ttsVoiceOptionsChanged=Mock(), _apply_setup_to_video=Mock(),
-        speakerModeChanged=Mock(), _manual_voice_configuration_snapshot=HaizFlowController._manual_voice_configuration_snapshot,
+        speakerModeChanged=Mock(), _manual_voice_configuration_snapshot=BeUpController._manual_voice_configuration_snapshot,
         _record_manual_voice_configuration_change=Mock(), runManualTool=Mock(return_value=True))
-    assert HaizFlowController.configureAndRunManualVoice(host, "vieneu-gpu", "vieneu:Hải Đăng", "all", "", "multiple")
+    assert BeUpController.configureAndRunManualVoice(host, "vieneu-gpu", "vieneu:Hải Đăng", "all", "", "multiple")
     host.runManualTool.assert_called_once_with("voice", False)
 
 

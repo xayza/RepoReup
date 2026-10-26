@@ -2,10 +2,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.services.douyin_video import (
-    HaizFlowDouyinIE, share_page_detail, video_id_from_url,
+from beup.services.douyin_video import (
+    BeUpDouyinIE, share_page_detail, video_id_from_url,
 )
-from haizflow.services.video_download import _extract_video_info, validate_video_url
+from beup.services.video_download import _extract_video_info, validate_video_url
 
 
 @pytest.mark.parametrize("url", [
@@ -40,7 +40,7 @@ def test_extractor_delegates_to_one_adapter():
     adapter.inspect.return_value = {"aweme_id": "768495470663049704", "video": {}}
     adapter.session.profile.ua = "stable UA"
     adapter.session.profile.transport_major = 150
-    ie = HaizFlowDouyinIE(adapter=adapter)
+    ie = BeUpDouyinIE(adapter=adapter)
     ie._parse_aweme_video_app = Mock(return_value={"formats": [{"url": "https://example.com/public.mp4"}]})
     result = ie._real_extract("https://v.douyin.com/demo/")
     assert result["webpage_url"] == "https://www.douyin.com/video/768495470663049704"
@@ -76,11 +76,11 @@ def test_other_sources_keep_their_existing_extractor(url, download):
     if "bilibili.com" in url:
         # Bilibili now retains advertised backup CDN URLs through its own
         # extractor. This must still never install the Douyin adapter.
-        from haizflow.services.bilibili_video import HaizFlowBiliBiliIE
+        from beup.services.bilibili_video import BeUpBiliBiliIE
 
         downloader.add_info_extractor.assert_called_once()
-        assert isinstance(downloader.add_info_extractor.call_args.args[0], HaizFlowBiliBiliIE)
-        assert not isinstance(downloader.add_info_extractor.call_args.args[0], HaizFlowDouyinIE)
+        assert isinstance(downloader.add_info_extractor.call_args.args[0], BeUpBiliBiliIE)
+        assert not isinstance(downloader.add_info_extractor.call_args.args[0], BeUpDouyinIE)
     else:
         downloader.add_info_extractor.assert_not_called()
     downloader.extract_info.assert_called_once_with(url, download=download)

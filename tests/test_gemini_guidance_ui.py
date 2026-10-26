@@ -29,7 +29,7 @@ def exercise(width, height, large, snapshot=""):
         if font.is_file():
             QFontDatabase.addApplicationFont(str(font))
     app.setFont(QFont("Segoe UI Variable", 14 if large else 11))
-    directory = Path(__file__).parents[1] / "src/haizflow/desktop/qml"
+    directory = Path(__file__).parents[1] / "src/beup/desktop/qml"
     engine = QQmlEngine()
     warnings = []
     engine.warnings.connect(lambda messages: warnings.extend(item.toString() for item in messages))

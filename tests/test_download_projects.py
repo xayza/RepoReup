@@ -11,9 +11,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from haizflow.desktop.media_download_controller import MediaDownloadController
-from haizflow.desktop.presenters import build_project_summaries
-from haizflow.services import project_store
+from beup.desktop.media_download_controller import MediaDownloadController
+from beup.desktop.presenters import build_project_summaries
+from beup.services import project_store
 
 
 class DownloadProjectTests(unittest.TestCase):

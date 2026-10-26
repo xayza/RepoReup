@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from haizflow.engine import main as engine_main  # noqa: E402
+from beup.engine import main as engine_main  # noqa: E402
 
 
 def load_script(name: str):
@@ -167,7 +167,7 @@ class EngineEntrypointTests(unittest.TestCase):
             payload = __import__("json").loads(output.read_text(encoding="utf-8"))
 
         self.assertEqual(payload["profile"], "vision")
-        self.assertEqual(payload["smoke_command"], ["HaizFlowEngine.exe", "--smoke", "--profile", "vision"])
+        self.assertEqual(payload["smoke_command"], ["BeUpEngine.exe", "--smoke", "--profile", "vision"])
         self.assertIn("subtitle_ocr", payload)
         self.assertNotIn("transcribe", payload)
 

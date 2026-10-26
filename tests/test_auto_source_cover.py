@@ -6,12 +6,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.desktop.project_commands_controller import ProjectCommandsController
-from haizflow.pipeline.process_video import _original_subtitle_region_for_render
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import batch_settings, project_store, source_cover, video_store
-from haizflow.services.processing_resume import can_resume, configuration_snapshot
+from beup.desktop.qml_controller import BeUpController
+from beup.desktop.project_commands_controller import ProjectCommandsController
+from beup.pipeline.process_video import _original_subtitle_region_for_render
+from beup.schemas.video import VideoConfig
+from beup.services import batch_settings, project_store, source_cover, video_store
+from beup.services.processing_resume import can_resume, configuration_snapshot
 
 
 REGION = dict(x_percent=12, y_percent=76, width_percent=70, height_percent=12)
@@ -51,21 +51,21 @@ def test_source_preview_reads_small_cache_only_and_never_selects_or_scans(video,
     host = SimpleNamespace(_selected_video_id=video.video_id, _selected_project_key=video.project_key,
                            _batch_video_ids=[], selectVideo=Mock())
     before = video_store.get_video(video.video_id).model_dump()
-    media = HaizFlowController.sourceCoverPreviewMedia(host, video.video_id)
+    media = BeUpController.sourceCoverPreviewMedia(host, video.video_id)
     assert media["detectedRegion"] == REGION
     assert media["videoSource"].startswith("file:")
     assert media["sourceKey"] == source_cover.source_key(video)
     assert video_store.get_video(video.video_id).model_dump() == before
     host.selectVideo.assert_not_called()
-    assert HaizFlowController.sourceCoverPreviewMedia(host, "foreign") == {}
+    assert BeUpController.sourceCoverPreviewMedia(host, "foreign") == {}
     host._selected_project_key = "another"
-    assert HaizFlowController.sourceCoverPreviewMedia(host, video.video_id) == {}
+    assert BeUpController.sourceCoverPreviewMedia(host, video.video_id) == {}
 
 
 def test_manual_override_bypasses_ocr_but_automatic_uses_existing_scan(video, tmp_path):
     reporter = Mock()
     video.original_subtitle_region_override = REGION
-    with patch("haizflow.pipeline.process_video.detect_original_subtitle_region", return_value=REGION) as scan:
+    with patch("beup.pipeline.process_video.detect_original_subtitle_region", return_value=REGION) as scan:
         assert _original_subtitle_region_for_render(video, reporter, str(tmp_path)) == REGION
         scan.assert_not_called()
         video.original_subtitle_region_override = {}
@@ -83,10 +83,10 @@ def save_host(video):
 def test_save_commits_current_draft_and_can_reenable_automatic(video):
     host = save_host(video)
     key = source_cover.source_key(video)
-    assert HaizFlowController.saveSourceCoverRegion(host, video.video_id, video.project_key, key, REGION)
+    assert BeUpController.saveSourceCoverRegion(host, video.video_id, video.project_key, key, REGION)
     assert host._original_subtitle_region_override == REGION
     host.persistVideoSettingsFor.assert_called_once_with(video.video_id)
-    assert HaizFlowController.saveSourceCoverRegion(host, video.video_id, video.project_key, key, {})
+    assert BeUpController.saveSourceCoverRegion(host, video.video_id, video.project_key, key, {})
     assert host._original_subtitle_region_override == {}
 
 
@@ -102,7 +102,7 @@ def test_stale_busy_or_invalid_dialog_cannot_commit(video, change):
     if change == "queued": host._processing_queue.contains = lambda _: True
     if change == "keep": host._remove_original_subtitles = False
     if change == "invalid": region = {"x_percent": 10}
-    assert not HaizFlowController.saveSourceCoverRegion(host, video.video_id, video.project_key, key, region)
+    assert not BeUpController.saveSourceCoverRegion(host, video.video_id, video.project_key, key, region)
     host.persistVideoSettingsFor.assert_not_called()
     assert host._original_subtitle_region_override == {}
 
@@ -110,7 +110,7 @@ def test_stale_busy_or_invalid_dialog_cannot_commit(video, change):
 def test_failed_commit_keeps_previous_region(video):
     host = save_host(video)
     host.persistVideoSettingsFor.return_value = False
-    assert not HaizFlowController.saveSourceCoverRegion(host, video.video_id, video.project_key,
+    assert not BeUpController.saveSourceCoverRegion(host, video.video_id, video.project_key,
                                                        source_cover.source_key(video), REGION)
     assert host._original_subtitle_region_override == {}
 
@@ -122,16 +122,16 @@ def test_real_save_only_persists_settings_and_preserves_cache_without_starting_w
     host._manual_settings_drafts = {}
     host.refreshVideos = Mock()
     host.selectedVideoChanged = Mock()
-    host._video_settings_snapshot = HaizFlowController._video_settings_snapshot
+    host._video_settings_snapshot = BeUpController._video_settings_snapshot
     host._record_video_settings_change = Mock()
-    host._apply_setup_to_video = lambda current: HaizFlowController._apply_config_to_video(host, current,
-        HaizFlowController._video_config_from_snapshot(current,
+    host._apply_setup_to_video = lambda current: BeUpController._apply_config_to_video(host, current,
+        BeUpController._video_config_from_snapshot(current,
             {"original_subtitle_region_override": host._original_subtitle_region_override}))
-    host.persistVideoSettingsFor = lambda key: HaizFlowController.persistVideoSettingsFor(host, key)
-    with patch("haizflow.pipeline.process_video.detect_original_subtitle_region") as scan, \
-         patch("haizflow.pipeline.render.render_video") as render, \
-         patch("haizflow.desktop.processing_lifecycle_controller.ProcessingLifecycleController.enqueue_video") as enqueue:
-        assert HaizFlowController.saveSourceCoverRegion(host, video.video_id, video.project_key,
+    host.persistVideoSettingsFor = lambda key: BeUpController.persistVideoSettingsFor(host, key)
+    with patch("beup.pipeline.process_video.detect_original_subtitle_region") as scan, \
+         patch("beup.pipeline.render.render_video") as render, \
+         patch("beup.desktop.processing_lifecycle_controller.ProcessingLifecycleController.enqueue_video") as enqueue:
+        assert BeUpController.saveSourceCoverRegion(host, video.video_id, video.project_key,
                                                        source_cover.source_key(video), REGION)
     scan.assert_not_called()
     render.assert_not_called()
@@ -146,7 +146,7 @@ def test_real_save_only_persists_settings_and_preserves_cache_without_starting_w
 
 def test_unrelated_snapshot_edits_keep_the_saved_cover_region(video):
     video.original_subtitle_region_override = REGION
-    config = HaizFlowController._video_config_from_snapshot(video, {"tts_voice": "omnivoice:male"})
+    config = BeUpController._video_config_from_snapshot(video, {"tts_voice": "omnivoice:male"})
     assert config.original_subtitle_region_override == REGION
 
 
@@ -185,9 +185,9 @@ def test_batch_keeps_individual_region_unless_explicitly_replaced(video, replace
     commands = ProjectCommandsController(host)
     changed = {**REGION, "y_percent": 55}
     with patch.object(commands, "batch_settings_values", return_value=baseline), \
-         patch("haizflow.desktop.project_commands_controller.video_store.get_video", side_effect=videos.get), \
-         patch("haizflow.desktop.project_commands_controller.video_store.update_video") as update, \
-         patch("haizflow.desktop.project_commands_controller.project_store.save_batch_settings"):
+         patch("beup.desktop.project_commands_controller.video_store.get_video", side_effect=videos.get), \
+         patch("beup.desktop.project_commands_controller.video_store.update_video") as update, \
+         patch("beup.desktop.project_commands_controller.project_store.save_batch_settings"):
         assert commands.apply_batch_settings_values("batch", {"originalSubtitleRegion": changed}, replace)
     assert {c.args[0] for c in update.call_args_list} == ({"shared", "custom"} if replace else {"shared"})
     assert all(c.kwargs["original_subtitle_region_override"] == changed for c in update.call_args_list)

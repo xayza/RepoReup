@@ -1,7 +1,7 @@
 import json
 from unittest.mock import Mock
 
-from haizflow.services import editor_view_state
+from beup.services import editor_view_state
 
 
 def test_editor_navigation_is_per_video_and_survives_reopen(tmp_path, monkeypatch):
@@ -28,7 +28,7 @@ def test_editor_navigation_is_per_video_and_survives_reopen(tmp_path, monkeypatc
 
 def test_ocr_restore_updates_snapshot_before_notifying_ui(monkeypatch):
     from types import SimpleNamespace
-    from haizflow.desktop.qml_controller import HaizFlowController
+    from beup.desktop.qml_controller import BeUpController
 
     old = SimpleNamespace(video_id="a", original_subtitle_region_override={"x_percent": 10})
     restored = SimpleNamespace(video_id="a", original_subtitle_region_override={})
@@ -36,12 +36,12 @@ def test_ocr_restore_updates_snapshot_before_notifying_ui(monkeypatch):
         _processing_queue=SimpleNamespace(contains=lambda _: False),
         _selected_video_snapshot=old, selectedVideoChanged=SimpleNamespace(emit=Mock()),
         subtitleSettingsChanged=SimpleNamespace(emit=Mock()))
-    monkeypatch.setattr("haizflow.desktop.qml_controller.video_store.update_video", lambda *_a, **_kw: restored)
+    monkeypatch.setattr("beup.desktop.qml_controller.video_store.update_video", lambda *_a, **_kw: restored)
     def assert_updated():
         assert host._selected_video_snapshot.original_subtitle_region_override == {}
 
     host.selectedVideoChanged.emit.side_effect = assert_updated
-    assert HaizFlowController.setOriginalSubtitleRegion(host, {})
+    assert BeUpController.setOriginalSubtitleRegion(host, {})
     assert host._selected_video_snapshot is restored
     host.selectedVideoChanged.emit.assert_called_once()
 
@@ -49,7 +49,7 @@ def test_ocr_restore_updates_snapshot_before_notifying_ui(monkeypatch):
 def test_workspace_saves_old_identity_and_restores_stage_on_navigation():
     from pathlib import Path
 
-    qml = (Path(__file__).parents[1] / "src/haizflow/desktop/qml/ManualWorkspace.qml").read_text(encoding="utf-8")
+    qml = (Path(__file__).parents[1] / "src/beup/desktop/qml/ManualWorkspace.qml").read_text(encoding="utf-8")
     assert "AppController.saveEditorViewState(previewVideoId" in qml
     assert "selectedStageIndex = Number(view.stage || 0)" in qml
     switch = qml.split("if (root.previewVideoId !== AppController.selectedVideoId) {", 1)[1]

@@ -5,8 +5,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from haizflow.desktop.audio_preview_controller import AudioPreviewController
-from haizflow.services import desktop_videos, video_store
+from beup.desktop.audio_preview_controller import AudioPreviewController
+from beup.services import desktop_videos, video_store
 
 
 class ManagedMediaCleanupTests(unittest.TestCase):

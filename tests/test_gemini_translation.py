@@ -5,8 +5,8 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from haizflow.services import gemini_translation, translation
-from haizflow.services.resource_packs import ResourcePackManager
+from beup.services import gemini_translation, translation
+from beup.services.resource_packs import ResourcePackManager
 
 
 class _Response:

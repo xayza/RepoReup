@@ -15,7 +15,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from haizflow.desktop.app_update_controller import AppUpdateController, installer_asset, version_key
+from beup.desktop.app_update_controller import AppUpdateController, installer_asset, version_key
 
 
 class Host(QObject):
@@ -39,12 +39,12 @@ class AppUpdateControllerTests(unittest.TestCase):
         controller = AppUpdateController(Host())
         controller._latest_version = "0.1.5"
         controller._state = "available"
-        with patch("haizflow.desktop.app_update_controller.__version__", "0.1.5"):
+        with patch("beup.desktop.app_update_controller.__version__", "0.1.5"):
             controller._apply_event({"kind": "result", "available": True, "version": "0.1.5",
                                      "notes": "", "url": ""})
             self.assertEqual(controller.state, "current")
             self.assertFalse(controller.available)
-            with patch("haizflow.desktop.app_update_controller.subprocess.Popen") as launch:
+            with patch("beup.desktop.app_update_controller.subprocess.Popen") as launch:
                 self.assertFalse(controller.install())
                 launch.assert_not_called()
 
@@ -62,7 +62,7 @@ class AppUpdateControllerTests(unittest.TestCase):
         self.assertEqual(changes, [False, True, False])
 
     def test_confirmation_launches_independent_updater_with_versioned_request(self):
-        from haizflow.update.state import Layout, provision
+        from beup.update.state import Layout, provision
 
         controller = AppUpdateController(Host())
         controller._latest_version = "99.0.0"
@@ -70,17 +70,17 @@ class AppUpdateControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             provision(root)
-            (root / "HaizFlow.exe").touch()
+            (root / "BeUp.exe").touch()
             (root / "updater").mkdir()
-            (root / "updater/HaizFlowUpdater.exe").touch()
+            (root / "updater/BeUpUpdater.exe").touch()
             controller._delta_layout = Layout(root)
-            with (patch("haizflow.desktop.app_update_controller.sys.frozen", True, create=True),
-                  patch("haizflow.desktop.app_update_controller.sys.platform", "win32"),
-                  patch("haizflow.desktop.app_update_controller.subprocess.Popen") as launch):
+            with (patch("beup.desktop.app_update_controller.sys.frozen", True, create=True),
+                  patch("beup.desktop.app_update_controller.sys.platform", "win32"),
+                  patch("beup.desktop.app_update_controller.subprocess.Popen") as launch):
                 self.assertTrue(controller.confirm_install("99.0.0", "available"))
                 request = json.loads((controller._delta_layout.ipc / (controller._delta_token + ".update.json")).read_text())
                 self.assertEqual(request["target"], "99.0.0")
-                self.assertEqual(launch.call_args.args[0], [str(root / "updater/HaizFlowUpdater.exe"),
+                self.assertEqual(launch.call_args.args[0], [str(root / "updater/BeUpUpdater.exe"),
                     "--install-root", str(root), "--request-token", request["token"]])
                 self.assertFalse(list(controller._delta_layout.ipc.glob("*.activate.json")))
                 self.assertEqual(controller.state, "downloading")
@@ -107,7 +107,7 @@ class AppUpdateControllerTests(unittest.TestCase):
         controller._delta_layout = Mock()
         controller._latest_version = "99.0.0"
         controller._state = "available"
-        with patch("haizflow.desktop.app_update_controller.subprocess.Popen") as launch:
+        with patch("beup.desktop.app_update_controller.subprocess.Popen") as launch:
             for property_name in ("isProcessing", "resourcePackBusy", "editorPreviewBusy"):
                 setattr(host, property_name, True)
                 self.assertFalse(controller.confirm_install("99.0.0", "available"))
@@ -123,8 +123,8 @@ class AppUpdateControllerTests(unittest.TestCase):
         controller._state = "ready"
         controller._latest_version = "99.0.0"
         controller._delta_token = "a" * 64
-        with (patch("haizflow.update.filesystem.child", return_value=Path("unused.json")),
-              patch("haizflow.update.filesystem.atomic_json", side_effect=PermissionError("Denied")),
+        with (patch("beup.update.filesystem.child", return_value=Path("unused.json")),
+              patch("beup.update.filesystem.atomic_json", side_effect=PermissionError("Denied")),
               patch("PySide6.QtCore.QCoreApplication.quit") as quit_app):
             self.assertFalse(controller.confirm_install("99.0.0", "ready"))
             quit_app.assert_not_called()
@@ -141,9 +141,9 @@ class AppUpdateControllerTests(unittest.TestCase):
         controller._delta_token = "a" * 64
         controller._state = "downloading"
         data = {"token": controller._delta_token, "state": "ready", "progress": 90}
-        with (patch("haizflow.update.filesystem.child", return_value=Mock(exists=lambda: True)),
-              patch("haizflow.update.filesystem.read_json", return_value=data),
-              patch("haizflow.update.filesystem.atomic_json") as activate,
+        with (patch("beup.update.filesystem.child", return_value=Mock(exists=lambda: True)),
+              patch("beup.update.filesystem.read_json", return_value=data),
+              patch("beup.update.filesystem.atomic_json") as activate,
               patch("PySide6.QtCore.QCoreApplication.quit") as quit_app):
             controller.drain_events()
             controller.drain_events()
@@ -159,8 +159,8 @@ class AppUpdateControllerTests(unittest.TestCase):
         controller._delta_token = "b" * 64
         controller._latest_version = "99.0.0"
         controller._state = "ready"
-        with (patch("haizflow.update.filesystem.child", return_value=Path("activate.json")),
-              patch("haizflow.update.filesystem.atomic_json") as activate,
+        with (patch("beup.update.filesystem.child", return_value=Path("activate.json")),
+              patch("beup.update.filesystem.atomic_json") as activate,
               patch("PySide6.QtCore.QCoreApplication.quit") as quit_app):
             self.assertTrue(controller.confirm_install("99.0.0", "ready"))
             activate.assert_called_once_with(Path("activate.json"), {"token": "b" * 64, "activate": True})
@@ -182,7 +182,7 @@ class AppUpdateControllerTests(unittest.TestCase):
             "body": "Release notes",
         }
         with patch(
-            "haizflow.desktop.app_update_controller.urllib.request.urlopen",
+            "beup.desktop.app_update_controller.urllib.request.urlopen",
             return_value=Response(json.dumps(payload).encode("utf-8")),
         ):
             controller.check(manual=True)
@@ -199,7 +199,7 @@ class AppUpdateControllerTests(unittest.TestCase):
             "html_url": "https://example.invalid/download.exe",
         }
         with patch(
-            "haizflow.desktop.app_update_controller.urllib.request.urlopen",
+            "beup.desktop.app_update_controller.urllib.request.urlopen",
             return_value=Response(json.dumps(payload).encode("utf-8")),
         ):
             controller.check(manual=True)
@@ -213,7 +213,7 @@ class AppUpdateControllerTests(unittest.TestCase):
         notifications = []
         host.appUpdateAvailable.connect(lambda: notifications.append(True))
         with patch(
-            "haizflow.desktop.app_update_controller.urllib.request.urlopen",
+            "beup.desktop.app_update_controller.urllib.request.urlopen",
             side_effect=urllib.error.HTTPError("https://api.github.com/", 404, "Not Found", None, None),
         ):
             controller.check(manual=True)
@@ -236,7 +236,7 @@ class AppUpdateControllerTests(unittest.TestCase):
 
     def test_only_expected_signed_installer_with_sha256_is_selected(self):
         asset = self.asset(b"installer")
-        payload = {"tag_name": "v99.0.0", "assets": [dict(asset, name="HaizFlow-99.0.0-UNSIGNED-Setup.exe"), asset]}
+        payload = {"tag_name": "v99.0.0", "assets": [dict(asset, name="BeUp-99.0.0-UNSIGNED-Setup.exe"), asset]}
         selected = installer_asset(payload, "99.0.0")
         self.assertEqual(selected["sha256"], asset["digest"][7:])
         for overrides in ({"digest": None}, {"browser_download_url": "https://evil.invalid/setup.exe"}, {"size": -1}):
@@ -245,7 +245,7 @@ class AppUpdateControllerTests(unittest.TestCase):
 
     @staticmethod
     def asset(data):
-        name = "HaizFlow-99.0.0-Setup.exe"
+        name = "BeUp-99.0.0-Setup.exe"
         return {"name": name, "browser_download_url": f"https://github.com/MachHongHai/HaizFlow/releases/download/v99.0.0/{name}",
                 "size": len(data), "digest": "sha256:" + hashlib.sha256(data).hexdigest()}
 
@@ -257,10 +257,10 @@ class AppUpdateControllerTests(unittest.TestCase):
         asset = installer_asset({"tag_name": "v99.0.0", "assets": [self.asset(data)]}, "99.0.0")
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch("haizflow.config.TMP_DIR", directory),
-            patch("haizflow.desktop.app_update_controller.urllib.request.urlopen", return_value=Response(data)),
-            patch("haizflow.desktop.app_update_controller.verify_installer_signature") as signature,
-            patch("haizflow.desktop.app_update_controller.subprocess.Popen") as launch,
+            patch("beup.config.TMP_DIR", directory),
+            patch("beup.desktop.app_update_controller.urllib.request.urlopen", return_value=Response(data)),
+            patch("beup.desktop.app_update_controller.verify_installer_signature") as signature,
+            patch("beup.desktop.app_update_controller.subprocess.Popen") as launch,
         ):
             controller._download_installer(asset)
             launch.assert_not_called()
@@ -277,10 +277,10 @@ class AppUpdateControllerTests(unittest.TestCase):
         asset["sha256"] = "0" * 64
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch("haizflow.config.TMP_DIR", directory),
-            patch("haizflow.desktop.app_update_controller.urllib.request.urlopen", return_value=Response(data)),
-            patch("haizflow.desktop.app_update_controller.verify_installer_signature") as signature,
-            patch("haizflow.desktop.app_update_controller.subprocess.Popen") as launch,
+            patch("beup.config.TMP_DIR", directory),
+            patch("beup.desktop.app_update_controller.urllib.request.urlopen", return_value=Response(data)),
+            patch("beup.desktop.app_update_controller.verify_installer_signature") as signature,
+            patch("beup.desktop.app_update_controller.subprocess.Popen") as launch,
         ):
             controller._download_installer(asset)
             controller.drain_events()
@@ -294,7 +294,7 @@ class AppUpdateControllerTests(unittest.TestCase):
         host.isProcessing = True
         controller = AppUpdateController(host)
         controller._events.put({"kind": "installer_ready", "path": "unused.exe"})
-        with patch("haizflow.desktop.app_update_controller.subprocess.Popen") as launch:
+        with patch("beup.desktop.app_update_controller.subprocess.Popen") as launch:
             controller.drain_events()
             launch.assert_not_called()
         self.assertIn("Tác vụ đang chạy", controller.error)
@@ -302,7 +302,7 @@ class AppUpdateControllerTests(unittest.TestCase):
     def test_source_mode_does_not_launch_or_download_an_installer(self):
         controller = AppUpdateController(Host())
         controller._latest_version = "99.0.0"
-        with patch("haizflow.desktop.app_update_controller.sys.frozen", False, create=True):
+        with patch("beup.desktop.app_update_controller.sys.frozen", False, create=True):
             self.assertFalse(controller.install())
         self.assertIn("đã cài đặt", controller.error)
 

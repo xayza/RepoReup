@@ -11,11 +11,11 @@ import yt_dlp
 from yt_dlp.networking._curlcffi import CurlCFFIRH
 from yt_dlp.utils import ExtractorError
 
-from haizflow.schemas.channel_import import ChannelImportRequest, ChannelVideoCandidate
-from haizflow.services import video_download
-from haizflow.services.channel_import import download_candidate
-from haizflow.services.douyin_transport import BrowserProfile
-from haizflow.services.douyin_video import HaizFlowDouyinIE, media_impersonate_target
+from beup.schemas.channel_import import ChannelImportRequest, ChannelVideoCandidate
+from beup.services import video_download
+from beup.services.channel_import import download_candidate
+from beup.services.douyin_transport import BrowserProfile
+from beup.services.douyin_video import BeUpDouyinIE, media_impersonate_target
 
 VIDEO_ID = "7683481325270177898"
 VIDEO_URL = f"https://www.douyin.com/video/{VIDEO_ID}"
@@ -116,9 +116,9 @@ def test_real_media_download_uses_supported_request_target(
             }],
         }
 
-    monkeypatch.setattr("haizflow.services.douyin_adapter.get_douyin_adapter", lambda _auth=None: adapter)
+    monkeypatch.setattr("beup.services.douyin_adapter.get_douyin_adapter", lambda _auth=None: adapter)
     monkeypatch.setattr(video_download, "_load_yt_dlp", lambda: SimpleNamespace(YoutubeDL=downloader_factory))
-    monkeypatch.setattr(HaizFlowDouyinIE, "_parse_aweme_video_app", parse)
+    monkeypatch.setattr(BeUpDouyinIE, "_parse_aweme_video_app", parse)
     monkeypatch.setattr(video_download, "_validate_processable_video", Mock())
     monkeypatch.setattr(
         video_download, "_normalize_downloaded_audio",

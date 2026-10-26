@@ -58,7 +58,7 @@ def test_missing_replacement_abi_is_rejected_before_mutation(tmp_path):
 def test_engine_packaging_never_targets_a_user_installation(tmp_path):
     module = load("package-engine-media")
     with patch.object(module, "ROOT", tmp_path), pytest.raises(ValueError, match="generated engine"):
-        module.package(tmp_path / "HaizFlow-Test", tmp_path / "inputs")
+        module.package(tmp_path / "BeUp-Test", tmp_path / "inputs")
 
 
 def test_native_input_tampering_is_detected(tmp_path):
@@ -66,7 +66,7 @@ def test_native_input_tampering_is_detected(tmp_path):
     inputs = tmp_path / "inputs"
     (inputs / "bin").mkdir(parents=True)
     (inputs / "bin/ffmpeg.exe").write_bytes(b"changed")
-    (inputs / "closure.json").write_text(json.dumps(dict(variant="haizflow", version="8.1.2",
+    (inputs / "closure.json").write_text(json.dumps(dict(variant="beup", version="8.1.2",
         binaries=[dict(file="ffmpeg.exe", sha256="0" * 64, size=7)], sources=[])), encoding="utf-8")
     with pytest.raises(ValueError, match="differs"):
         module.validate(inputs)

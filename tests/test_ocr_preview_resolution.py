@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
-from haizflow.desktop.editor_preview_controller import EditorPreviewController
-from haizflow.pipeline import render
-from haizflow.schemas.video import CropSettings, SubtitleStyle
-from haizflow.utils.ffmpeg import _binary, get_video_dimensions, get_video_duration
+from beup.desktop.editor_preview_controller import EditorPreviewController
+from beup.pipeline import render
+from beup.schemas.video import CropSettings, SubtitleStyle
+from beup.utils.ffmpeg import _binary, get_video_dimensions, get_video_duration
 
 
 @pytest.mark.parametrize("mode", ["blur", "patch"])

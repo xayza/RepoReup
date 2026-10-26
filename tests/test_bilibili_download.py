@@ -8,7 +8,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.services import video_download
+from beup.services import video_download
 
 
 @pytest.mark.parametrize("avc_height,avc_fps,expected", [(1080, 30, "avc"), (720, 30, "av1"), (1080, 24, "av1")])
@@ -147,7 +147,7 @@ def test_bilibili_audio_uses_small_http_ranges_without_changing_other_platforms(
 @pytest.mark.parametrize("key,backup_key", [("baseUrl", "backupUrl"), ("base_url", "backup_url")])
 def test_cdn_retry_uses_advertised_backup_without_changing_format_or_source(key, backup_key):
     from copy import deepcopy
-    from haizflow.services.bilibili_video import HaizFlowBiliBiliIE
+    from beup.services.bilibili_video import BeUpBiliBiliIE
     primary = "https://primary.example/video-30080.m4s?token=primary"
     backup = "https://backup.example/video-30080.m4s?token=backup"
     play_info = {"dash": {
@@ -157,9 +157,9 @@ def test_cdn_retry_uses_advertised_backup_without_changing_format_or_source(key,
                    "codecs": "mp4a.40.2", "mimeType": "audio/mp4", "bandwidth": 128000}],
     }}
     original = deepcopy(play_info)
-    first = HaizFlowBiliBiliIE(cdn_attempt=0).extract_formats(play_info)
-    second = HaizFlowBiliBiliIE(cdn_attempt=1).extract_formats(play_info)
-    third = HaizFlowBiliBiliIE(cdn_attempt=2).extract_formats(play_info)
+    first = BeUpBiliBiliIE(cdn_attempt=0).extract_formats(play_info)
+    second = BeUpBiliBiliIE(cdn_attempt=1).extract_formats(play_info)
+    third = BeUpBiliBiliIE(cdn_attempt=2).extract_formats(play_info)
     assert play_info == original
     assert [item["url"] for item in second] == [backup + "-audio", backup]
     assert [item["url"] for item in third] == [item["url"] for item in first]
@@ -168,12 +168,12 @@ def test_cdn_retry_uses_advertised_backup_without_changing_format_or_source(key,
 
 
 def test_progressive_fragments_rotate_to_their_own_backup_not_another_track():
-    from haizflow.services.bilibili_video import HaizFlowBiliBiliIE
+    from beup.services.bilibili_video import BeUpBiliBiliIE
     play_info = {"durl": [
         {"url": "https://first.example/1.flv", "backup_url": ["https://backup.example/1.flv"], "length": 1000, "size": 500},
         {"url": "https://first.example/2.flv", "backup_url": ["https://backup.example/2.flv"], "length": 1000, "size": 500},
     ]}
-    formats = HaizFlowBiliBiliIE(cdn_attempt=1).extract_formats(play_info)
+    formats = BeUpBiliBiliIE(cdn_attempt=1).extract_formats(play_info)
     assert formats[0]["url"] == "https://backup.example/1.flv"
     assert [fragment["url"] for fragment in formats[0]["fragments"]] == [
         "https://backup.example/1.flv", "https://backup.example/2.flv"]
@@ -182,17 +182,17 @@ def test_progressive_fragments_rotate_to_their_own_backup_not_another_track():
 
 @pytest.mark.parametrize("backup", [None, "file:///C:/private", "https://[", ["javascript:alert(1)", "https://user:secret@host/video"], {}])
 def test_invalid_backup_is_never_used(backup):
-    from haizflow.services.bilibili_video import _stream_urls
+    from beup.services.bilibili_video import _stream_urls
     primary = "https://primary.example/video.m4s"
     assert _stream_urls({"baseUrl": primary, "backupUrl": backup}) == [primary]
 
 
 @pytest.mark.parametrize("url", ["https://www.bilibili.com/video/BV1fZGc6vEhe/", "https://b23.tv/example"])
 def test_bilibili_keeps_native_url_dispatch_including_short_link_redirects(url):
-    from haizflow.services.bilibili_video import HaizFlowBiliBiliIE
-    downloader = Mock(params={"_haizflow_bilibili_cdn_attempt": 1})
+    from beup.services.bilibili_video import BeUpBiliBiliIE
+    downloader = Mock(params={"_beup_bilibili_cdn_attempt": 1})
     video_download._extract_video_info(downloader, url, download=True)
     registered = downloader.add_info_extractor.call_args.args[0]
-    assert isinstance(registered, HaizFlowBiliBiliIE) and registered.ie_key() == "BiliBili"
+    assert isinstance(registered, BeUpBiliBiliIE) and registered.ie_key() == "BiliBili"
     assert registered._cdn_attempt == 1
     downloader.extract_info.assert_called_once_with(url, download=True)

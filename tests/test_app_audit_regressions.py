@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.services import video_store
+from beup.desktop.qml_controller import BeUpController
+from beup.services import video_store
 
 
 def source(generation=1):
@@ -26,8 +26,8 @@ def test_guidance_save_is_bound_to_exact_source_and_never_mutates_stale_owner(mo
         _gemini_translation_instructions="", _gemini_translation_glossary="",
         _gemini_translation_style="literal", persistVideoSettingsFor=Mock(return_value=True),
         geminiGuidanceChanged=Mock(), _show_app_alert=Mock())
-    key = HaizFlowController._video_source_key(source())
-    result = HaizFlowController.saveGeminiTranslationGuidance(host, "project", "a", " old story ",
+    key = BeUpController._video_source_key(source())
+    result = BeUpController.saveGeminiTranslationGuidance(host, "project", "a", " old story ",
                                                             " old characters ", "literal", key)
     assert result is (state == "same")
     assert host.persistVideoSettingsFor.call_count == int(state == "same")
@@ -37,24 +37,24 @@ def test_guidance_save_is_bound_to_exact_source_and_never_mutates_stale_owner(mo
 
 def test_source_key_survives_settings_edits_but_not_replacement():
     video = source()
-    before = HaizFlowController._video_source_key(video)
+    before = BeUpController._video_source_key(video)
     video.updated_at = "2026-10-25T01:00:00Z"
     video.watermark_text = "Changed"
     video.gemini_translation_instructions = "Changed"
-    assert HaizFlowController._video_source_key(video) == before
+    assert BeUpController._video_source_key(video) == before
     video.manual_tool_generations["source"] += 1
-    assert HaizFlowController._video_source_key(video) != before
+    assert BeUpController._video_source_key(video) != before
 
 
 def test_selected_source_key_uses_cached_selection_without_disk_lookup(monkeypatch):
     monkeypatch.setattr(video_store, "get_video", Mock(side_effect=AssertionError("unexpected disk read")))
     video = source()
     host = SimpleNamespace(_selected_video=lambda: video)
-    assert HaizFlowController.selectedVideoSourceKey.fget(host) == HaizFlowController._video_source_key(video)
+    assert BeUpController.selectedVideoSourceKey.fget(host) == BeUpController._video_source_key(video)
 
 
 def test_manual_loading_placeholder_references_its_own_loader():
-    source_text = (Path(__file__).parents[1] / "src/haizflow/desktop/qml/RouteHost.qml").read_text(encoding="utf-8")
+    source_text = (Path(__file__).parents[1] / "src/beup/desktop/qml/RouteHost.qml").read_text(encoding="utf-8")
     manual_loader = source_text.split("id: manualWorkspaceLoader", 1)[1].split("\n    ProjectsPage {", 1)[0]
     assert 'active: root.currentRoute === "manual-workspace"' in manual_loader
     assert "visible: manualWorkspaceLoader.active" in manual_loader

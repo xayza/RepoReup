@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from haizflow.core import model_integrity
+from beup.core import model_integrity
 
 
 class ModelIntegrityTests(unittest.TestCase):

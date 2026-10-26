@@ -4,10 +4,10 @@ from unittest import mock
 
 import pytest
 
-from haizflow.pipeline import omnivoice_tts, voice_reference
-from haizflow.schemas.video import VideoConfig
-from haizflow.services.resource_packs import ResourcePackManager
-from haizflow.services.video_store import _migrate_video_metadata
+from beup.pipeline import omnivoice_tts, voice_reference
+from beup.schemas.video import VideoConfig
+from beup.services.resource_packs import ResourcePackManager
+from beup.services.video_store import _migrate_video_metadata
 
 
 @pytest.mark.parametrize("provider", ["omnivoice", "omnivoice-gpu"])

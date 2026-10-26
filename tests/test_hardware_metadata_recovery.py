@@ -7,8 +7,8 @@ from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from haizflow.core import hardware
-from haizflow.desktop.runtime_device_controller import RuntimeDeviceController
+from beup.core import hardware
+from beup.desktop.runtime_device_controller import RuntimeDeviceController
 
 
 def test_first_probe_runs_before_one_day_of_windows_uptime():
@@ -117,7 +117,7 @@ def test_completed_static_metadata_reaches_ui_without_gpu_reprobe():
     host = SimpleNamespace(_hardware_capabilities=original, _hardware_probe_events=queue.Queue(),
                            hardwareChanged=Mock())
     controller = RuntimeDeviceController(host, detect_hardware=Mock(side_effect=AssertionError("CUDA probe")))
-    with patch("haizflow.desktop.runtime_device_controller.refresh_hardware_metadata", return_value=completed):
+    with patch("beup.desktop.runtime_device_controller.refresh_hardware_metadata", return_value=completed):
         controller.drain_hardware_events()
         controller.drain_hardware_events()
     assert host._hardware_capabilities == completed

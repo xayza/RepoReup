@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from haizflow.services.external_engine import ExternalEngineClient, ExternalEngineError, ExternalEnginePool  # noqa: E402
+from beup.services.external_engine import ExternalEngineClient, ExternalEngineError, ExternalEnginePool  # noqa: E402
 
 
 FAKE_ENGINE = r"""
@@ -60,7 +60,7 @@ class _Manager:
 
 class ExternalEngineTests(unittest.TestCase):
     def test_missing_scipy_error_preserves_cause_and_offers_pack_repair(self):
-        from haizflow.services.external_engine import _engine_failure_message
+        from beup.services.external_engine import _engine_failure_message
 
         cause = "No module named 'scipy.linalg._linalg_pythran'"
         message = _engine_failure_message("engine-cpu-py313", cause)

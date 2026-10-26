@@ -7,10 +7,10 @@ import pytest
 import srt
 from PySide6.QtGui import QGuiApplication
 
-from haizflow.desktop.subtitle_overlay_renderer import SubtitleOverlayRenderer, export_events, timestamp
-from haizflow.pipeline import render
-from haizflow.schemas.video import SubtitleStyle
-from haizflow.utils.ffmpeg import _binary
+from beup.desktop.subtitle_overlay_renderer import SubtitleOverlayRenderer, export_events, timestamp
+from beup.pipeline import render
+from beup.schemas.video import SubtitleStyle
+from beup.utils.ffmpeg import _binary
 
 _APP = None
 

@@ -1,8 +1,8 @@
 import re
 import subprocess
-from haizflow.desktop.subtitle_overlay_renderer import export_events
-from haizflow.pipeline.render import _subtitle_patch_prefix
-from haizflow.utils.ffmpeg import _binary
+from beup.desktop.subtitle_overlay_renderer import export_events
+from beup.pipeline.render import _subtitle_patch_prefix
+from beup.utils.ffmpeg import _binary
 
 
 def test_karaoke_disappears_at_speech_end_without_changing_editable_window(tmp_path):

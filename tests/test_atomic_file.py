@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from haizflow.utils import atomic_file
-from haizflow.services import video_store
+from beup.utils import atomic_file
+from beup.services import video_store
 
 
 def test_speaker_cache_temp_name_fits_legacy_windows_path_limit(tmp_path):

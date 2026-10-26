@@ -7,10 +7,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.pipeline import manual_tools, process_video
-from haizflow.schemas.video import VideoConfig, VideoInfo
-from haizflow.services import batch_settings, gemini_context, gemini_translation, translation, video_export
-from haizflow.services.processing_resume import configuration_snapshot
+from beup.pipeline import manual_tools, process_video
+from beup.schemas.video import VideoConfig, VideoInfo
+from beup.services import batch_settings, gemini_context, gemini_translation, translation, video_export
+from beup.services.processing_resume import configuration_snapshot
 
 
 @pytest.mark.parametrize("model", list(gemini_translation.MODELS))

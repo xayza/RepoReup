@@ -9,7 +9,7 @@ from PySide6.QtQml import QQmlComponent, QQmlEngine
 from PySide6.QtQuick import QQuickItem
 from PySide6.QtTest import QTest
 
-QML = Path(__file__).resolve().parents[1] / "src/haizflow/desktop/qml"
+QML = Path(__file__).resolve().parents[1] / "src/beup/desktop/qml"
 
 
 def test_background_update_notification_never_opens_popup():
