@@ -58,8 +58,10 @@ MACHINES = [
 @pytest.mark.parametrize("device", ["cpu", "gpu"])
 def test_admission_ui_and_resource_packs_agree(machine, device):
     caps = machine.caps()
-    expected = machine.cpu_ok if device == "cpu" else machine.gpu_ok
-    assert hardware.validate_processing_device(device, caps)[0] is expected
+    # No gate anymore: validation always passes (warning only). The
+    # recommendation still follows real capability, and the runtime
+    # profile below still falls back to CPU when the GPU is not usable.
+    assert hardware.validate_processing_device(device, caps)[0] is True
     assert hardware.recommended_processing_device(caps) == ("gpu" if machine.gpu_ok else "cpu")
     host = SimpleNamespace(_settings_processing_device=device, _settings_language="vi",
                            _startup_hardware_resolved=True, _hardware_capabilities=caps)
@@ -68,18 +70,17 @@ def test_admission_ui_and_resource_packs_agree(machine, device):
     packs = ("engine-cpu-py313", "model-hymt2-cpu", "model-demucs-cpu") if device == "cpu" else (
         "engine-cuda128-py313", "model-whisper-turbo", "model-hymt2-gpu", "model-demucs-gpu")
     for pack in packs:
-        pack_expected = expected and not (device == "gpu" and caps.gpu_supported
-            and not caps.heavy_gpu_models_supported and pack in {"model-whisper-turbo", "model-hymt2-gpu"})
-        assert controller._hardware_compatibility(pack)[0] is pack_expected
+        # Download/install is never blocked by hardware anymore.
+        assert controller._hardware_compatibility(pack)[0] is True
     options = BeUpController.speechRecognitionModelOptions.fget(host)
     assert options[0]["available"]
-    assert options[1]["available"] is (device == "gpu" and machine.gpu_ok)
-    assert options[2]["available"] is (device == "gpu" and machine.gpu_ok
+    assert options[1]["available"] is (device == "gpu")
+    assert options[2]["available"] is (device == "gpu"
         and caps.heavy_gpu_models_supported)
     voice_options = BeUpController._tts_provider_options_for_language(host, "vi")
     providers = {item["provider"]: item for item in voice_options}
     for provider in ("vieneu-gpu", "omnivoice-gpu"):
-        assert providers[provider]["available"] is (device == "gpu" and machine.gpu_ok)
+        assert providers[provider]["available"] is (device == "gpu")
     assert voice_options[0]["provider"] == "vieneu-gpu"
     profile = hardware.runtime_profile_for(caps, device)
     assert profile.cuda_available is (device == "gpu" and machine.gpu_ok)
@@ -112,8 +113,9 @@ def test_auto_manual_batch_preflight_share_hardware_admission(machine, device, p
         "small-gpu" if device == "gpu" else "small-cpu"), translation_model="q4",
         tts_provider="omnivoice-gpu" if device == "gpu" else "omnivoice",
         tts_voice="omnivoice:male").model_dump(), video_id="matrix", status="pending")
-    expected = machine.cpu_ok if device == "cpu" else machine.gpu_ok
-    assert ProjectCommandsController._resources_ready_for_videos(host, [video]) is expected
+    # Preflight never refuses on hardware grounds anymore (warning +
+    # run-time CPU fallback instead); the probe lambda above now passes.
+    assert ProjectCommandsController._resources_ready_for_videos(host, [video]) is True
 
 
 @pytest.mark.parametrize("choice,device,expected", [

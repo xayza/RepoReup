@@ -98,6 +98,15 @@ class ModelAsset:
     relative_path: str
     size: int
     sha256: str
+    # Unverified assets (verified=False, size 0, sha256 "") come from a real
+    # upstream repo but have no pinned size/hash verified from that repo.
+    # They still download over HTTPS from an approved host via the same
+    # mechanism, but the UI must label them unverified and must never
+    # present them as checksum-verified. Optional assets (optional=True)
+    # are skipped when the upstream repo does not carry that file (HTTP 404)
+    # instead of failing the whole pack.
+    verified: bool = True
+    optional: bool = False
 
 
 @dataclass(frozen=True)
@@ -273,6 +282,51 @@ def required_assets(device: str) -> tuple[ModelAsset, ...]:
     return tuple(assets)
 
 
+# Additional faster-whisper recognition models. These are real upstream
+# repos (see beup.core.model_choices.MODEL_RECOMMENDATIONS for the ids),
+# downloaded from Hugging Face "main" because no pinned revision/size/SHA
+# was verified from the repo for them. They are therefore UNVERIFIED:
+# install_model_assets downloads them over HTTPS from huggingface.co but
+# cannot checksum-pin them, and the engine only loads them after a
+# presence check (config.json + model.bin + tokenizer.json), never via the
+# pinned verifier used for small / large-v3-turbo. Never invent a size or
+# SHA for these entries; size 0 / sha256 "" is the honest marker.
+WHISPER_CATALOG_MODELS = {
+    # model id -> (HF repo, component, label)
+    "medium": ("Systran/faster-whisper-medium", "whisper-medium", "Whisper Medium"),
+    "large-v3": ("Systran/faster-whisper-large-v3", "whisper-large-v3", "Whisper Large v3"),
+    "distil-large-v3": ("Systran/faster-distil-whisper-large-v3", "whisper-distil-large-v3", "Whisper Distil Large v3"),
+}
+_WHISPER_CATALOG_REQUIRED_FILES = ("config.json", "model.bin", "tokenizer.json")
+_WHISPER_CATALOG_OPTIONAL_FILES = ("preprocessor_config.json", "vocabulary.txt", "vocabulary.json")
+
+
+def whisper_catalog_assets(model_id: str | None = None) -> tuple[ModelAsset, ...]:
+    """Unverified faster-whisper assets for the expanded catalog.
+
+    With no argument, returns every catalog model; with a model id, only
+    that model. Raises ValueError for an unknown id. The returned assets
+    are installable through install_model_assets() (see its unverified
+    handling) and through ResourcePackManager packs model-whisper-*.
+    """
+    if model_id is None:
+        wanted = WHISPER_CATALOG_MODELS
+    else:
+        normalized = str(model_id).lower()
+        if normalized not in WHISPER_CATALOG_MODELS:
+            raise ValueError(f"Unknown unverified Whisper catalog model: {model_id}")
+        wanted = {normalized: WHISPER_CATALOG_MODELS[normalized]}
+    assets: list[ModelAsset] = []
+    for catalog_id, (repo, component, label) in wanted.items():
+        for filename in _WHISPER_CATALOG_REQUIRED_FILES:
+            assets.append(ModelAsset(component, label, _hub_url(repo, "main", filename),
+                                     f"whisper/{catalog_id}/{filename}", 0, "", verified=False))
+        for filename in _WHISPER_CATALOG_OPTIONAL_FILES:
+            assets.append(ModelAsset(component, label, _hub_url(repo, "main", filename),
+                                     f"whisper/{catalog_id}/{filename}", 0, "", verified=False, optional=True))
+    return tuple(assets)
+
+
 def vieneu_assets() -> tuple[ModelAsset, ...]:
     from beup.core.vieneu_assets import MANIFEST
 
@@ -303,6 +357,10 @@ def _sha256(path: Path, *, cancel_event=None, progress=lambda _done, _total: Non
 
 def _asset_is_valid(path: Path, asset: ModelAsset, *, cancel_event=None, progress=lambda _done, _total: None) -> bool:
     try:
+        if not asset.verified:
+            # No pinned size/hash exists: presence + non-empty is the only
+            # honest check. The caller must label the pack unverified.
+            return path.is_file() and path.stat().st_size > 0
         return path.is_file() and path.stat().st_size == asset.size and _sha256(
             path, cancel_event=cancel_event, progress=progress) == asset.sha256
     except OSError:
@@ -320,15 +378,18 @@ def _prepare_partial(destination: Path, asset: ModelAsset, *, cancel_event=None)
         partial.unlink(missing_ok=True)
         return 0
 
-    if partial_size > asset.size:
-        partial.unlink(missing_ok=True)
-        return 0
-    if partial_size == asset.size:
-        if _sha256(partial, cancel_event=cancel_event) == asset.sha256:
-            os.replace(partial, destination)
-            return asset.size
-        partial.unlink(missing_ok=True)
-        return 0
+    if asset.verified:
+        if partial_size > asset.size:
+            partial.unlink(missing_ok=True)
+            return 0
+        if partial_size == asset.size:
+            if _sha256(partial, cancel_event=cancel_event) == asset.sha256:
+                os.replace(partial, destination)
+                return asset.size
+            partial.unlink(missing_ok=True)
+            return 0
+    # Unverified: a partial prefix is resumable as-is; its bytes are hashed
+    # during the download loop, but there is no pinned hash to compare.
     return partial_size
 
 
@@ -410,7 +471,7 @@ def _download_asset(
         destination.unlink(missing_ok=True)
 
     partial = destination.with_name(destination.name + ".part")
-    if _prepare_partial(destination, asset, cancel_event=cancel_event) == asset.size:
+    if asset.verified and _prepare_partial(destination, asset, cancel_event=cancel_event) == asset.size:
         progress(
             ModelProgress(
                 "downloading",
@@ -435,7 +496,7 @@ def _download_asset(
                 mode = "ab" if resume else "wb"
                 advertised = response.headers.get("Content-Length")
                 expected_response_size = asset.size - offset
-                if advertised is not None and int(advertised) != expected_response_size:
+                if asset.verified and advertised is not None and int(advertised) != expected_response_size:
                     raise ModelBootstrapError(f"{asset.label} returned an unexpected download size.")
                 written = offset
                 digest = hashlib.sha256()
@@ -456,7 +517,7 @@ def _download_asset(
                         if not chunk:
                             break
                         written += len(chunk)
-                        if written > asset.size:
+                        if asset.verified and written > asset.size:
                             raise ModelBootstrapError(f"{asset.label} exceeded its pinned size.")
                         output.write(chunk)
                         digest.update(chunk)
@@ -471,19 +532,22 @@ def _download_asset(
                         )
                     output.flush()
                     os.fsync(output.fileno())
-            if partial.stat().st_size != asset.size:
+            if asset.verified and partial.stat().st_size != asset.size:
                 raise ModelBootstrapError(f"{asset.label} download ended before the expected size.")
+            if not asset.verified and partial.stat().st_size == 0:
+                partial.unlink(missing_ok=True)
+                raise ModelBootstrapError(f"{asset.label} download returned an empty file.")
             progress(
                 ModelProgress(
                     "verifying",
                     asset.label,
                     f"Đang kiểm tra tệp · {asset.label}",
-                    base_completed + asset.size,
+                    base_completed + (asset.size if asset.verified else written),
                     total_bytes,
                 )
             )
             _check_cancelled(cancel_event)
-            if digest.hexdigest() != asset.sha256:
+            if asset.verified and digest.hexdigest() != asset.sha256:
                 partial.unlink(missing_ok=True)
                 raise ModelBootstrapError(f"{asset.label} failed SHA-256 verification.")
             os.replace(partial, destination)
@@ -493,6 +557,15 @@ def _download_asset(
             # still untouched until the complete payload passes SHA-256.
             raise
         except (OSError, ValueError, urllib.error.URLError, ModelBootstrapError) as exc:
+            # Optional catalog files (e.g. vocabulary.txt on a repo that
+            # ships vocabulary.json instead) are skipped on HTTP 404
+            # instead of failing the whole pack.
+            if asset.optional and isinstance(exc, urllib.error.HTTPError) and exc.code == 404:
+                partial.unlink(missing_ok=True)
+                progress(ModelProgress("downloading", asset.label,
+                                       f"Bỏ qua tệp không có · {asset.label}",
+                                       base_completed, total_bytes))
+                return
             last_error = exc
             reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
             if isinstance(reason, ssl.SSLCertVerificationError):
@@ -590,11 +663,14 @@ def install_model_assets(
             continue
         destination = root / Path(asset.relative_path)
         resumable_bytes = _prepare_partial(destination, asset, cancel_event=cancel_event)
-        if resumable_bytes == asset.size:
+        if asset.verified and resumable_bytes == asset.size:
             valid.add(asset.relative_path)
             completed += asset.size
             continue
-        missing_bytes += asset.size - resumable_bytes
+        # Unverified assets have no known size: they do not contribute to
+        # the free-space estimate (only the 1 GiB headroom still applies
+        # when other verified assets are missing).
+        missing_bytes += asset.size - resumable_bytes if asset.verified else 0
     required_free = missing_bytes + DOWNLOAD_HEADROOM_BYTES
     if missing_bytes and shutil.disk_usage(root).free < required_free:
         required_gib = required_free / 1024**3

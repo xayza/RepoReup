@@ -26,10 +26,10 @@ class SettingsController:
                 return False
             if not host._ensure_hardware_ready_for_action():
                 return False
-            compatible, reason = validate_processing_device(device, host._hardware_capabilities)
-            if not compatible:
-                host.appAlertRequested.emit("Không thể dùng bộ xử lý này", str(reason), "warning")
-                return False
+            # validate_processing_device is warning-only now: warn, continue.
+            _compatible, reason = validate_processing_device(device, host._hardware_capabilities)
+            if reason and ("Cảnh báo" in reason or "Warning" in reason):
+                host.appAlertRequested.emit("Cấu hình khuyến nghị", str(reason), "warning")
             resources = getattr(host, "_resource_packs", None)
             pack = "engine-cuda128-py313" if device == "gpu" else "engine-cpu-py313"
             if resources and resources.manager.status(pack) == "missing":
@@ -67,7 +67,9 @@ class SettingsController:
 
     def apply(self, theme, language, translation_model) -> bool:
         host = self._host
-        theme = "graphite"
+        from beup.desktop.system_theme import normalize_theme_mode
+
+        theme = normalize_theme_mode(theme)
         translation_model = str(translation_model).lower()
         if translation_model not in {"auto", "q4", "full"}:
             return False
@@ -77,18 +79,22 @@ class SettingsController:
             QMessageBox.warning(None, "Translation model", "Wait until the current task finishes before changing the translation model.")
             return False
         if model_changed and translation_model == "full" and host._settings_processing_device != "gpu":
-            QMessageBox.warning(None, "Translation model", "HY-MT2 đầy đủ cần GPU NVIDIA tương thích. Hãy chọn Tự động hoặc Q4.")
-            return False
+            # Dismissable warning only: the choice is saved, and at run time
+            # models_for_device falls back to HY-MT2 CPU Q4 in CPU mode.
+            QMessageBox.warning(None, "Translation model",
+                "Đang dùng chế độ CPU: HY-MT2 GPU đầy đủ sẽ chạy bằng bản CPU Q4 tương đương (chậm hơn). "
+                "Việc tải/cài model không bị chặn.")
         if translation_model == "full":
             if not host._ensure_hardware_ready_for_action():
                 return False
-            from beup.core.model_choices import heavy_gpu_choice_blocked
+            from beup.core.model_choices import heavy_gpu_choice_warning
 
-            if heavy_gpu_choice_blocked(host._settings_processing_device,
-                                        getattr(host, "_hardware_capabilities", None), translation="full"):
-                host.appAlertRequested.emit("GPU không đủ VRAM", "HY-MT2 GPU đầy đủ cần ít nhất 5 GiB VRAM. Chọn HY-MT2 CPU Q4.", "warning")
-                return False
+            _heavy_warning = heavy_gpu_choice_warning(host._settings_processing_device,
+                                        getattr(host, "_hardware_capabilities", None), translation="full")
+            if _heavy_warning:
+                host.appAlertRequested.emit("GPU không đủ VRAM", _heavy_warning, "warning")
         history_before = {
+            "theme": str(getattr(host, "_settings_theme", "system")),
             "language": str(host._settings_language),
             "translation_model": str(getattr(host, "_settings_translation_model", "auto")),
         }
@@ -150,10 +156,42 @@ class SettingsController:
             record(
                 history_before,
                 {
+                    "theme": str(host._settings_theme),
                     "language": str(host._settings_language),
                     "translation_model": str(host._settings_translation_model),
                 },
             )
+        return True
+
+    def set_theme_mode(self, mode: str) -> bool:
+        """Persist one theme mode immediately (used by the Settings page).
+
+        Theme changes apply live, so unlike language/device they do not
+        wait for the footer "Áp dụng" button.  Returns False for an
+        unknown mode or a save failure, leaving the current mode intact.
+        """
+        host = self._host
+        from beup.desktop.system_theme import (
+            THEME_MODES,
+            normalize_theme_mode,
+            refresh_system_theme_cache,
+        )
+
+        if str(mode or "").strip().lower() not in THEME_MODES and str(mode or "").strip().lower() != "graphite":
+            return False
+        normalized = normalize_theme_mode(mode)
+        if normalized == getattr(host, "_settings_theme", None):
+            return True
+        try:
+            settings = desktop_settings.save_settings({"theme": normalized})
+        except OSError as exc:
+            host.appAlertRequested.emit("Không lưu được cài đặt", str(exc), "warning")
+            return False
+        host._settings_theme = settings["theme"]
+        # Re-read the system/wallpaper snapshot so QML picks up a wallpaper
+        # or system-mode change without waiting for the cache TTL.
+        refresh_system_theme_cache()
+        host.settingsChanged.emit()
         return True
 
     def reset(self) -> None:
@@ -162,6 +200,7 @@ class SettingsController:
             QMessageBox.warning(None, "Settings", "Wait until the current task finishes before restoring defaults.")
             return
         history_before = {
+            "theme": str(getattr(host, "_settings_theme", "system")),
             "language": str(host._settings_language),
             "translation_model": str(getattr(host, "_settings_translation_model", "auto")),
         }
@@ -220,6 +259,7 @@ class SettingsController:
             record(
                 history_before,
                 {
+                    "theme": str(host._settings_theme),
                     "language": str(host._settings_language),
                     "translation_model": str(host._settings_translation_model),
                 },
@@ -257,10 +297,12 @@ class SettingsController:
         capabilities = getattr(host, "_hardware_capabilities", None)
         if capabilities is None:
             return False
-        compatible, reason = validate_processing_device(preference, capabilities, language=getattr(host, "_settings_language", "vi"))
-        if not compatible:
-            host.appAlertRequested.emit("Không thể dùng bộ xử lý này", str(reason), "warning")
-            return False
+        # validate_processing_device is warning-only now: the choice is
+        # always saved; a below-recommendation machine gets a warning and
+        # the run-time CPU fallback, never a refusal.
+        _compatible, reason = validate_processing_device(preference, capabilities, language=getattr(host, "_settings_language", "vi"))
+        if reason and ("Cảnh báo" in reason or "Warning" in reason):
+            host.appAlertRequested.emit("Cấu hình khuyến nghị", str(reason), "warning")
         try:
             desktop_settings.save_settings({"processing_device": preference, "processing_device_origin": "manual"})
         except OSError as exc:

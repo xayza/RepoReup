@@ -4,7 +4,7 @@
 The current root `LICENSE` and independent component licenses remain in force.
 
 BeUp was created by Mach Hong Hai. Official downloads are linked from
-https://github.com/MachHongHai/HaizFlow/releases and https://haizflow.pages.dev/.
+https://github.com/xayza/RepoReup/releases.
 
 1. **Free use.** You may install and run an authorized release without payment
    to its developer, for personal or business use, including commercial video

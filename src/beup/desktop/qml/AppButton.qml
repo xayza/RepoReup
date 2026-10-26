@@ -12,10 +12,13 @@ Button {
     property bool showToolTip: false
     readonly property bool showLeadingIcon: iconGlyph.length > 0 && text.length === 0
 
-    implicitHeight: compact ? UiMetrics.compactControlHeight : tone === "primary" ? UiMetrics.primaryControlHeight : UiMetrics.controlHeight
+    // Primary actions stay dominant even through StudioButton (compact):
+    // 40 px tall with wider side padding, so the main action on Home and on
+    // the model/resource pages stands out from secondary buttons.
+    implicitHeight: tone === "primary" ? UiMetrics.primaryControlHeight : compact ? UiMetrics.compactControlHeight : UiMetrics.controlHeight
     implicitWidth: Math.max(compact ? 64 : 80, buttonContent.implicitWidth + leftPadding + rightPadding)
-    leftPadding: compact ? 10 : 12
-    rightPadding: compact ? 10 : 12
+    leftPadding: tone === "primary" ? 16 : compact ? 10 : 12
+    rightPadding: tone === "primary" ? 16 : compact ? 10 : 12
     font.family: Theme.fontFamily
     font.pixelSize: TypeScale.control
     font.weight: Font.DemiBold

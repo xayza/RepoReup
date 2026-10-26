@@ -56,6 +56,28 @@ Item {
                         onActivated: function(value) { root.draftLanguage = value; root.localEditsPending = true; }
                     }
                 }
+                SettingRow {
+                    Layout.fillWidth: true
+                    label: qsTr("Giao diện / Hình nền")
+                    description: qsTr("Áp dụng ngay khi chọn, không cần bấm Áp dụng.")
+                    SegmentedControl {
+                        objectName: "settingsThemeChoice"
+                        Layout.preferredWidth: 400
+                        currentValue: AppController.settingsTheme
+                        options: [{ label: qsTr("Sáng"), value: "light" }, { label: qsTr("Tối"), value: "dark" },
+                            { label: qsTr("Theo hệ thống"), value: "system" }, { label: qsTr("Theo hình nền"), value: "wallpaper" }]
+                        onActivated: function(value) { AppController.setThemeMode(value); }
+                    }
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: qsTr("Sáng/Tối: cố định; Theo hệ thống: theo Windows; Theo hình nền: lấy hình nền máy tính làm nền app, tự tối đi để chữ dễ đọc.")
+                    color: Theme.textMuted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: TypeScale.label
+                    textFormat: Text.PlainText
+                    wrapMode: Text.WordWrap
+                }
             }
             SettingsGroup {
                 Layout.fillWidth: true

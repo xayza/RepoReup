@@ -56,6 +56,44 @@ PACK_PROTOCOL_VERSION = 1
 RESOURCE_STATE_VERSION = 1
 
 
+# Pack id -> model_choices recommendation key. Packs without a model entry
+# get a generic recommendation built from their own sizes (see
+# _pack_recommendation). This is the Python-side data the model picker /
+# Model Manager QML reads to show per-model recommendations instead of the
+# old hardware-gate screen.
+_PACK_RECOMMENDATION_KEY = {
+    "model-whisper-small": "small",
+    "model-whisper-turbo": "large-v3-turbo",
+    "model-whisper-medium": "medium",
+    "model-whisper-large-v3": "large-v3",
+    "model-whisper-distil-large-v3": "distil-large-v3",
+    "model-hymt2-cpu": "q4",
+    "model-hymt2-gpu": "full",
+    "model-vieneu": "vieneu",
+    "model-omnivoice": "omnivoice",
+}
+
+
+def _pack_recommendation(definition: ResourcePackDefinition) -> dict:
+    from beup.core.model_choices import model_recommendation
+
+    key = _PACK_RECOMMENDATION_KEY.get(definition.pack_id)
+    if key:
+        recommendation = model_recommendation(key)
+        if definition.pack_id == "model-whisper-small":
+            recommendation["note"] = "Gói gồm Whisper Small + VAD + alignment."
+        return recommendation
+    size_gib = definition.download_size / 1024**3 if definition.download_size else 0
+    return {
+        "model_id": definition.pack_id,
+        "ram_gb": None,
+        "vram": "Xem mô tả gói",
+        "disk": f"~{size_gib:.1f} GB" if size_gib else "Không rõ",
+        "quality_vs_speed": "Gói hệ thống/bổ trợ, không phải model nhận dạng/dịch/giọng đọc.",
+        "download_status": "verified" if definition.assets and all(asset.verified for asset in definition.assets) else "pack-pending",
+    }
+
+
 def _speaker_asset() -> ModelAsset:
     from beup.pipeline.speaker_identity import MODEL_FILE, MODEL_SHA256, MODEL_SIZE, MODEL_URL
 
@@ -131,10 +169,11 @@ class ResourcePackDefinition:
 
 
 def _assets_by_component() -> dict[str, tuple[ModelAsset, ...]]:
-    from beup.services.model_bootstrap import vieneu_assets
+    from beup.services.model_bootstrap import vieneu_assets, whisper_catalog_assets
 
     combined = {asset.relative_path: asset for asset in (*required_assets("cpu"), *required_assets("gpu"))}
     combined.update({asset.relative_path: asset for asset in vieneu_assets()})
+    combined.update({asset.relative_path: asset for asset in whisper_catalog_assets()})
     grouped: dict[str, list[ModelAsset]] = {}
     for asset in combined.values():
         grouped.setdefault(asset.component, []).append(asset)
@@ -184,8 +223,13 @@ def built_in_pack_definitions() -> tuple[ResourcePackDefinition, ...]:
         dependencies: tuple[str, ...],
         *,
         backend: str = "",
+        download_size: int | None = None,
     ) -> ResourcePackDefinition:
         assets = tuple(asset for component in components for asset in grouped.get(component, ()))
+        # Unverified catalog assets carry size 0 (no pinned size); the
+        # caller supplies an approximate download size for the space check
+        # and the UI instead. Verified packs keep the exact pinned sum.
+        estimated = sum(asset.size for asset in assets)
         return ResourcePackDefinition(
             pack_id,
             label,
@@ -195,8 +239,8 @@ def built_in_pack_definitions() -> tuple[ResourcePackDefinition, ...]:
             backend,
             dependencies,
             assets,
-            sum(asset.size for asset in assets),
-            sum(asset.size for asset in assets),
+            download_size if download_size is not None else estimated,
+            download_size if download_size is not None else estimated,
         )
 
     from beup.services import douyin_component as browser
@@ -265,6 +309,37 @@ def built_in_pack_definitions() -> tuple[ResourcePackDefinition, ...]:
             ("whisper-turbo", "whisperx-vad", "alignment"),
             (),
             backend="gpu",
+        ),
+        # Expanded faster-whisper catalog. These packs download real
+        # upstream models through the existing asset mechanism, but their
+        # files are NOT checksum-pinned (see model_bootstrap); the UI must
+        # show them as unverified. Estimated sizes only, for the space check.
+        model_pack(
+            "model-whisper-medium",
+            "Whisper Medium (chưa kiểm chứng SHA)",
+            "recognition",
+            "recognition",
+            ("whisper-medium",),
+            (),
+            download_size=1_600_000_000,
+        ),
+        model_pack(
+            "model-whisper-large-v3",
+            "Whisper Large v3 (chưa kiểm chứng SHA)",
+            "recognition",
+            "recognition",
+            ("whisper-large-v3",),
+            (),
+            download_size=3_200_000_000,
+        ),
+        model_pack(
+            "model-whisper-distil-large-v3",
+            "Whisper Distil Large v3 (chưa kiểm chứng SHA)",
+            "recognition",
+            "recognition",
+            ("whisper-distil-large-v3",),
+            (),
+            download_size=1_600_000_000,
         ),
         model_pack(
             "model-hymt2-cpu", "HY-MT2 CPU", "translation", "translation",
@@ -551,6 +626,15 @@ class ResourcePackManager:
         root = models_dir()
         if not definition.assets:
             return False
+        if any(not asset.verified for asset in definition.assets):
+            # Unverified catalog packs have no pinned hashes to check:
+            # presence of every REQUIRED file (optional files may be
+            # absent when the upstream repo does not carry them).
+            return all(
+                (root / asset.relative_path).is_file()
+                and (root / asset.relative_path).stat().st_size > 0
+                for asset in definition.assets if not asset.optional
+            )
         try:
             verify_pack_assets(root, definition.pack_id, definition.version, definition.assets)
         except (OSError, ModelIntegrityError):
@@ -702,6 +786,7 @@ class ResourcePackManager:
                     "version": definition.version,
                     "capability": definition.capability,
                     "backend": definition.backend,
+                    "recommendation": _pack_recommendation(definition),
                     "status": status,
                     "downloadSize": self.download_bytes(definition.pack_id),
                     "installedSize": self.installed_bytes(definition.pack_id),
@@ -746,10 +831,13 @@ class ResourcePackManager:
         if context.get("reference_asr"):
             recognition_device = device
         engine_pack = f"engine-{'cuda128-py313' if recognition_device == 'gpu' else 'cpu-py313'}"
-        whisper_pack = (
-            "model-whisper-turbo" if recognition_model in {"turbo", "large-v3-turbo"}
-            else "model-whisper-small"
-        )
+        whisper_pack = {
+            "turbo": "model-whisper-turbo",
+            "large-v3-turbo": "model-whisper-turbo",
+            "medium": "model-whisper-medium",
+            "large-v3": "model-whisper-large-v3",
+            "distil-large-v3": "model-whisper-distil-large-v3",
+        }.get(recognition_model, "model-whisper-small")
         translation_packs: list[str] = []
         if str(capability) == "translation":
             translation_model = str(context.get("translation_model") or "auto").lower()
@@ -922,6 +1010,15 @@ class ResourcePackManager:
             verify_whisperx_vad_model(root / "whisperx-vad")
             for language in ALIGNMENT_MODELS:
                 verify_alignment_model(root / "alignment", language)
+        elif pack_id in {"model-whisper-medium", "model-whisper-large-v3", "model-whisper-distil-large-v3"}:
+            # Unverified catalog model: presence check only, never the
+            # pinned verifier (there is no pinned hash to compare).
+            model_dir = root / "whisper" / pack_id.removeprefix("model-whisper-")
+            for filename in ("config.json", "model.bin", "tokenizer.json"):
+                candidate = model_dir / filename
+                if not candidate.is_file() or candidate.stat().st_size == 0:
+                    from beup.core.model_integrity import ModelIntegrityError
+                    raise ModelIntegrityError(f"Unverified Whisper model file is missing or empty: {candidate}")
         elif pack_id == "model-hymt2-cpu":
             verify_cpu_model(root / "hymt2-gguf" / HYMT2_CPU_FILE)
         elif pack_id == "model-hymt2-gpu":

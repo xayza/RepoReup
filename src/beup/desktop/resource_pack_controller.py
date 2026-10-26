@@ -264,20 +264,32 @@ class ResourcePackController(QObject):
         }
 
     def _hardware_compatibility(self, pack_id: str) -> tuple[bool, str]:
+        """Per-pack hardware advice -- NEVER a download/install gate.
+
+        Always returns True: any listed pack may be downloaded/installed
+        regardless of VRAM/GPU/CPU capability. The message is a dismissable
+        Vietnamese warning (recommended config vs. this machine) shown by
+        the Model Manager UI via the snapshot's hardwareWarning field.
+        Run-time safety is the CPU fallback in model_choices, not a refusal
+        here.
+        """
         if not getattr(self._host, "_startup_hardware_resolved", True):
             return True, ""  # A pending probe must not be presented as an absent GPU.
         capabilities = getattr(self._host, "_hardware_capabilities", None)
         if capabilities is None:
-            if pack_id in {"engine-cpu-py313", "engine-cuda128-py313", "model-whisper-small", "model-whisper-turbo", "model-hymt2-cpu", "model-hymt2-gpu", "model-demucs-cpu", "model-demucs-gpu"}:
-                return False, "Chưa đọc được cấu hình máy. Hãy kiểm tra lại trước khi cài gói xử lý."
-            return True, ""
+            return True, ("Chưa đọc được cấu hình máy; bạn vẫn có thể cài gói này. "
+                          "Khi chạy, BeUp sẽ dùng bản CPU tương đương nếu máy không có GPU.")
         if pack_id in {"model-whisper-turbo", "model-hymt2-gpu"} and capabilities.gpu_supported \
                 and not capabilities.heavy_gpu_models_supported:
-            return False, "Card 4 GB dùng Whisper Small trên GPU; chọn HY-MT2 CPU Q4 cho bước dịch."
+            return True, ("Cảnh báo: card 4 GB dưới mức khuyến nghị 5 GiB VRAM cho Whisper Turbo / "
+                          "HY-MT2 GPU đầy đủ. Bạn vẫn có thể cài gói; khi chạy có thể chậm, "
+                          "hãy cân nhắc Whisper Small GPU hoặc HY-MT2 CPU Q4.")
         if pack_id in {"engine-cuda128-py313", "model-whisper-turbo", "model-hymt2-gpu", "model-demucs-gpu"}:
-            return validate_processing_device("gpu", capabilities, language=getattr(self._host, "_settings_language", "vi"))
+            from beup.core.hardware import hardware_warning
+            return True, hardware_warning("gpu", capabilities, language=getattr(self._host, "_settings_language", "vi"))
         if pack_id in {"engine-cpu-py313", "model-whisper-small", "model-hymt2-cpu", "model-demucs-cpu"}:
-            return validate_processing_device("cpu", capabilities, language=getattr(self._host, "_settings_language", "vi"))
+            from beup.core.hardware import hardware_warning
+            return True, hardware_warning("cpu", capabilities, language=getattr(self._host, "_settings_language", "vi"))
         return True, ""
 
     def _supporting_packs(self, pack_id: str) -> list[str]:
@@ -366,9 +378,9 @@ class ResourcePackController(QObject):
                 if self.manager.status(item) not in {"installed", "bundled"}
             ]
             for runtime in supporting:
-                runtime_compatible, runtime_warning = self._hardware_compatibility(runtime)
-                if not runtime_compatible:
-                    compatible, warning = False, runtime_warning
+                _runtime_compatible, runtime_warning = self._hardware_compatibility(runtime)
+                if runtime_warning:
+                    warning = runtime_warning
             if supporting and source.get("status") == "installed":
                 source["status"] = "missing"
                 source["detail"] = "Cần cài môi trường xử lý." if vi else "The processing runtime needs to be installed."
@@ -667,18 +679,20 @@ class ResourcePackController(QObject):
             pack_id = str(raw_pack_id)
             if pack_id not in self.manager.definitions:
                 continue
-            compatible, reason = self._hardware_compatibility(pack_id)
+            # Hardware advice only: a warning must never skip an install.
+            # _hardware_compatibility always returns True now; show its
+            # warning (if any) and queue the install regardless.
+            _compatible, reason = self._hardware_compatibility(pack_id)
             for unit in self._supporting_packs(pack_id):
-                runtime_compatible, runtime_reason = self._hardware_compatibility(unit)
-                if not runtime_compatible:
-                    compatible, reason = False, runtime_reason
-            if not compatible:
+                _runtime_compatible, runtime_reason = self._hardware_compatibility(unit)
+                if runtime_reason:
+                    reason = runtime_reason
+            if reason:
                 self._host.appAlertRequested.emit(
-                    "Gói không phù hợp với máy này",
+                    "Cấu hình khuyến nghị",
                     reason,
                     "warning",
                 )
-                continue
             self._queue_operation("install", pack_id)
         self.changed.emit()
 

@@ -514,7 +514,7 @@ class ProjectCommandsController:
 
     @staticmethod
     def _resources_ready_for_videos(host, videos) -> bool:
-        from beup.core.model_choices import gpu_choice_blocked, heavy_gpu_choice_blocked, models_for_device, project_translation_choice
+        from beup.core.model_choices import gpu_choice_warning, heavy_gpu_choice_warning, models_for_device, project_translation_choice
 
         if getattr(getattr(host, "_resource_packs", None), "storageMoving", False):
             host.appAlertRequested.emit("Đang chuyển gói tài nguyên", "Hãy chờ chuyển vị trí hoàn tất trước khi xử lý.", "info")
@@ -539,6 +539,25 @@ class ProjectCommandsController:
                 return False
         capabilities = getattr(host, "_hardware_capabilities", None)
         vram = getattr(capabilities, "total_vram_bytes", None)
+        # Hardware advice only: warn once per distinct message, then continue.
+        # The models_for_device loop below already converts GPU choices to
+        # their CPU equivalents at run time, so a warning must not refuse.
+        # Warnings are computed from the pre-conversion choices but emitted
+        # after conversion, matching the old order of operations.
+        _pre_choices = [(
+            getattr(video, "speech_recognition_model", getattr(host, "_speech_recognition_model", "small")) if video else getattr(host, "_speech_recognition_model", "small"),
+            getattr(video, "translation_model", getattr(host, "_translation_model", "auto")) if video else getattr(host, "_translation_model", "auto"),
+            getattr(video, "tts_provider", getattr(host, "_tts_provider", "omnivoice")) if video else getattr(host, "_tts_provider", "omnivoice"),
+        ) for video in videos]
+        _warnings: set[str] = set()
+
+        def _emit_warning(title: str, message: str) -> None:
+            if message and message not in _warnings:
+                _warnings.add(message)
+                alert = getattr(host, "appAlertRequested", None)
+                if alert is not None:
+                    alert.emit(title, message, "warning")
+
         for index, video in enumerate(videos):
             if video and getattr(video, "status", "") != "processing":
                 compatible = models_for_device(str(getattr(host, "_settings_processing_device", "cpu")),
@@ -549,26 +568,18 @@ class ProjectCommandsController:
                 if changes and not host._processing_queue.contains(video.video_id):
                     videos[index] = video_store.update_video(video.video_id, **changes) or video
 
-        for video in videos:
-            if gpu_choice_blocked(str(getattr(host, "_settings_processing_device", "cpu")),
-                                  recognition=getattr(video, "speech_recognition_model", getattr(host, "_speech_recognition_model", "small")),
-                                  translation=getattr(video, "translation_model", getattr(host, "_translation_model", "auto")),
-                                  voice=getattr(video, "tts_provider", getattr(host, "_tts_provider", "omnivoice"))):
-                host.appAlertRequested.emit("Đang dùng chế độ CPU", "Dự án đang chọn model GPU. Chọn model CPU hoặc chuyển sang GPU trong Cài đặt → Chung.", "warning")
-                return False
+        for _rec, _trans, _voice in _pre_choices:
+            _emit_warning("Đang dùng chế độ CPU", gpu_choice_warning(
+                str(getattr(host, "_settings_processing_device", "cpu")),
+                recognition=_rec, translation=_trans, voice=_voice))
         device = str(getattr(host, "_settings_processing_device", "cpu"))
         for video in videos:
             recognition = str(getattr(video, "speech_recognition_model", getattr(host, "_speech_recognition_model", "small")))
             translation = project_translation_choice(
                 str(getattr(video, "translation_model", getattr(host, "_translation_model", "q4"))),
                 device, total_vram_bytes=vram)
-            if heavy_gpu_choice_blocked(device, capabilities, recognition=recognition, translation=translation):
-                host.appAlertRequested.emit(
-                    "GPU không đủ VRAM",
-                    "Whisper Turbo và HY-MT2 GPU đầy đủ cần ít nhất 5 GiB VRAM. Chọn Whisper Small GPU hoặc HY-MT2 CPU Q4 trước khi xử lý.",
-                    "warning",
-                )
-                return False
+            _emit_warning("GPU không đủ VRAM", heavy_gpu_choice_warning(
+                device, capabilities, recognition=recognition, translation=translation))
         if any(str(getattr(video, "translation_model", "")).startswith("gemini-") for video in videos if video):
             from beup.services.gemini_translation import key_configured
 
@@ -623,10 +634,11 @@ class ProjectCommandsController:
                 capabilities.append("ocr")
             for capability in capabilities:
                 for pack_id in resource_controller.manager.required_packs(capability, context):
-                    compatible, reason = resource_controller._hardware_compatibility(pack_id)
-                    if not compatible:
-                        host.appAlertRequested.emit("Máy không đáp ứng", reason, "warning")
-                        return False
+                    # Hardware advice only (always compatible now): warn and
+                    # continue to the missing-pack check below.
+                    _compatible, reason = resource_controller._hardware_compatibility(pack_id)
+                    if reason:
+                        host.appAlertRequested.emit("Cấu hình khuyến nghị", reason, "warning")
                 missing.extend(resource_controller.manager.missing_packs(capability, context))
         missing = list(dict.fromkeys(missing))
         if not missing:
@@ -980,19 +992,21 @@ class ProjectCommandsController:
         after = {}
         try:
             config = batch_settings.config_for(normalized)
-            from beup.core.model_choices import gpu_choice_blocked
+            # Hardware advice only: warn and continue applying; the run-time
+            # fallback converts GPU choices to CPU equivalents when running.
+            from beup.core.model_choices import gpu_choice_warning, heavy_gpu_choice_warning
 
-            if gpu_choice_blocked(str(getattr(host, "_settings_processing_device", "cpu")),
+            _batch_warning = gpu_choice_warning(str(getattr(host, "_settings_processing_device", "cpu")),
                                   recognition=config.speech_recognition_model,
-                                  translation=config.translation_model, voice=config.tts_provider):
-                raise ValueError("Chọn model CPU hoặc chuyển sang GPU trong Cài đặt → Chung.")
-            from beup.core.model_choices import heavy_gpu_choice_blocked
-
-            if heavy_gpu_choice_blocked(str(getattr(host, "_settings_processing_device", "cpu")),
+                                  translation=config.translation_model, voice=config.tts_provider) \
+                or heavy_gpu_choice_warning(str(getattr(host, "_settings_processing_device", "cpu")),
                                         getattr(host, "_hardware_capabilities", None),
                                         recognition=config.speech_recognition_model,
-                                        translation=config.translation_model):
-                raise ValueError("GPU có dưới 5 GiB VRAM. Chọn Whisper Small GPU và HY-MT2 CPU Q4 trước khi áp dụng.")
+                                        translation=config.translation_model)
+            if _batch_warning:
+                _alert = getattr(host, "appAlertRequested", None)
+                if _alert is not None:
+                    _alert.emit("Cấu hình khuyến nghị", _batch_warning, "warning")
             normalized["subtitleStyle"] = {**config.subtitle_style.model_dump(), "manual": config.subtitle_layout_override}
             for key in batch_settings.ASSETS:
                 normalized[key] = batch_settings.stage_asset(project_key, key, str(normalized.get(key) or ""))
@@ -1094,25 +1108,27 @@ class ProjectCommandsController:
         if asr_model not in {"small", "small-cpu", "small-gpu", "large-v3-turbo"}:
             asr_model = "small"
         selected_translation_model = str(translation_model or getattr(host, "_translation_model", "auto")).lower()
-        from beup.core.model_choices import gpu_choice_blocked
+        from beup.core.model_choices import gpu_choice_warning
 
-        if gpu_choice_blocked(str(getattr(host, "_settings_processing_device", "cpu")),
-                              recognition=asr_model, translation=selected_translation_model, voice=provider):
-            QMessageBox.warning(None, "Đang dùng chế độ CPU", "Chọn model CPU hoặc chuyển sang GPU trong Cài đặt → Chung.")
-            return False
+        _gpu_warning = gpu_choice_warning(str(getattr(host, "_settings_processing_device", "cpu")),
+                              recognition=asr_model, translation=selected_translation_model, voice=provider)
+        if _gpu_warning:
+            # Dismissable warning only: continue applying; the run-time
+            # fallback converts the GPU choice to its CPU equivalent.
+            QMessageBox.warning(None, "Đang dùng chế độ CPU", _gpu_warning)
         if selected_translation_model not in {"auto", "q4", "full", "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"}:
             return False
         capabilities = getattr(host, "_hardware_capabilities", None)
-        from beup.core.model_choices import heavy_gpu_choice_blocked, project_translation_choice
+        from beup.core.model_choices import heavy_gpu_choice_warning, project_translation_choice
 
         selected_translation_model = project_translation_choice(
             selected_translation_model, str(getattr(host, "_settings_processing_device", "cpu")),
             total_vram_bytes=getattr(capabilities, "total_vram_bytes", None))
-        if heavy_gpu_choice_blocked(str(getattr(host, "_settings_processing_device", "cpu")),
+        _heavy_warning = heavy_gpu_choice_warning(str(getattr(host, "_settings_processing_device", "cpu")),
                                     capabilities, recognition=asr_model,
-                                    translation=selected_translation_model):
-            host._show_app_alert("GPU không đủ VRAM", "GPU có dưới 5 GiB VRAM. Chọn Whisper Small GPU và HY-MT2 CPU Q4 trước khi áp dụng.", "warning")
-            return False
+                                    translation=selected_translation_model)
+        if _heavy_warning:
+            host._show_app_alert("GPU không đủ VRAM", _heavy_warning, "warning")
         turbo_gpu_available = bool(
             getattr(host, "_settings_processing_device", "") == "gpu"
             and (

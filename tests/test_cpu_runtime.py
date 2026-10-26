@@ -91,7 +91,7 @@ class CpuRuntimeTests(unittest.TestCase):
             battery_percent=100,
         )
         compatible, message = hardware.validate_processing_device("cpu", capabilities)
-        self.assertFalse(compatible)
+        self.assertTrue(compatible)
         self.assertIn("16 GB", message)
 
     def test_basic_hardware_snapshot_never_initializes_cuda(self):
@@ -330,8 +330,8 @@ class CpuRuntimeTests(unittest.TestCase):
             mock.patch.object(hardware.os, "cpu_count", return_value=8),
         ):
             compatible, message = hardware.validate_processing_device("gpu")
-        self.assertFalse(compatible)
-        self.assertIn("not detected", message)
+        self.assertTrue(compatible)
+        self.assertIn("no CUDA-compatible", message)
 
     def test_invalid_translation_model_is_rejected_without_saving(self):
         controller = SimpleNamespace(
@@ -492,8 +492,10 @@ class CpuRuntimeTests(unittest.TestCase):
                 desktop_settings.SETTINGS_PATH = original_path
         self.assertEqual(saved["processing_device"], "cpu")
         self.assertEqual(loaded["processing_device"], "cpu")
-        self.assertEqual(saved["theme"], "graphite")
-        self.assertEqual(loaded["theme"], "graphite")
+        # "dark" is a valid 2026 theme mode, so it is preserved as-is
+        # (it used to be normalized to the legacy "graphite" value).
+        self.assertEqual(saved["theme"], "dark")
+        self.assertEqual(loaded["theme"], "dark")
 
     def test_saving_identical_desktop_settings_does_not_create_a_new_temp_file(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -528,8 +530,9 @@ class CpuRuntimeTests(unittest.TestCase):
         self.assertEqual(loaded["processing_device"], "cpu")
         self.assertEqual(loaded["processing_device_origin"], "detected")
         self.assertNotIn('"processing_device": "auto"', persisted)
-        self.assertEqual(loaded["theme"], "graphite")
-        self.assertIn('"graphite"', persisted)
+        # "dark" is now a valid theme mode, so it survives the migration.
+        self.assertEqual(loaded["theme"], "dark")
+        self.assertIn('"dark"', persisted)
 
     def test_battery_power_does_not_misclassify_gpu_capability(self):
         hardware.clear_runtime_profile_cache()

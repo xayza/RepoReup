@@ -437,12 +437,15 @@ def refresh_hardware_metadata(capabilities: HardwareCapabilities) -> HardwareCap
     return replace(capabilities, **changed) if changed else capabilities
 
 
-def detect_hardware_capabilities() -> HardwareCapabilities:
-    """Probe live hardware telemetry without changing the active runtime profile."""
-    # The snapshot is cached only so the several CUDA fields in this one
-    # probe share a single nvidia-smi query. A failed first query must not
-    # report "no GPU" forever when the driver finishes starting later.
-    _nvidia_snapshot.cache_clear()
+def _probe_hardware_capabilities() -> HardwareCapabilities:
+    """Probe hardware once, reusing the cached nvidia-smi snapshot.
+
+    The cached snapshot exists so the several CUDA fields in one probe share
+    a single nvidia-smi query, and so repeated UI/model-picker reads do not
+    re-run nvidia-smi. Callers that need a genuinely fresh probe (GPU
+    disappearance checks, startup retries) must use
+    :func:`refresh_hardware_capabilities` instead.
+    """
     cuda_available, cuda_name = _cuda_details()
     cuda_compute_capability, cuda_bf16_supported = (
         _cuda_precision_details() if cuda_available else ((0, 0), False)
@@ -528,9 +531,32 @@ def configure_translation_model(preference: str) -> str:
     return normalized
 
 
+def detect_hardware_capabilities() -> HardwareCapabilities:
+    """Fresh probe: clear the cached nvidia-smi snapshot, then probe.
+
+    Use for startup, GPU-disappearance checks and driver-start retries. A
+    failed first query must not report "no GPU" forever when the driver
+    finishes starting later.
+    """
+    _nvidia_snapshot.cache_clear()
+    return _probe_hardware_capabilities()
+
+
+def refresh_hardware_capabilities() -> HardwareCapabilities:
+    """Alias for a fresh probe (see :func:`detect_hardware_capabilities`)."""
+    return detect_hardware_capabilities()
+
+
 @lru_cache(maxsize=1)
 def hardware_capabilities() -> HardwareCapabilities:
-    return detect_hardware_capabilities()
+    """Cached probe path (default for UI / model-picker use).
+
+    Probes once per process and reuses the result; it never clears the
+    nvidia-smi cache, so opening the model picker does not re-run
+    nvidia-smi. Use :func:`clear_runtime_profile_cache` (tests) or
+    :func:`refresh_hardware_capabilities` (live re-checks) for a new probe.
+    """
+    return _probe_hardware_capabilities()
 
 
 def recommended_processing_device(capabilities: HardwareCapabilities | None = None) -> str:
@@ -539,38 +565,77 @@ def recommended_processing_device(capabilities: HardwareCapabilities | None = No
     return "gpu" if capabilities.gpu_supported else "cpu"
 
 
+def hardware_warning(
+    preference: str,
+    capabilities: HardwareCapabilities | None = None,
+    *, language: str = "en",
+) -> str:
+    """Vietnamese/English warning when hardware is below the recommended config.
+
+    Returns "" when the machine meets the recommendations. This is advice
+    only -- it must never be used to refuse a download, install or device
+    choice (see :func:`validate_processing_device`).
+    """
+    preference = preference if preference in _DEVICE_PREFERENCES else "cpu"
+    capabilities = capabilities or hardware_capabilities()
+    warnings: list[str] = []
+    if preference == "gpu":
+        if not capabilities.cuda_available:
+            warnings.append(
+                "Cảnh báo: không phát hiện GPU NVIDIA tương thích CUDA. Bạn vẫn có thể tải/cài mọi model; "
+                "khi chạy model GPU, BeUp sẽ dùng bản CPU tương đương (chậm hơn)."
+                if language == "vi" else
+                "Warning: no CUDA-compatible NVIDIA GPU detected. You can still download/install any model; "
+                "GPU models will fall back to their CPU equivalent at run time (slower).")
+        elif capabilities.total_vram_bytes < _MIN_GPU_VRAM_BYTES:
+            available = capabilities.total_vram_bytes / _GIB
+            warnings.append(
+                f"Cảnh báo: GPU chỉ có {available:.1f} GiB VRAM, dưới mức khuyến nghị 3.5 GiB VRAM riêng "
+                "(card 4 GB). Việc tải/cài không bị chặn; khi chạy model nặng có thể chậm hoặc thiếu bộ nhớ."
+                if language == "vi" else
+                f"Warning: GPU has only {available:.1f} GiB VRAM, below the recommended 3.5 GiB dedicated VRAM "
+                "(4 GB class). Download/install is not blocked; heavy models may run slowly or run out of memory.")
+    if not _ram_capacity_supported(capabilities):
+        installed = getattr(capabilities, "installed_ram_bytes", None)
+        usable = capabilities.total_ram_bytes
+        installed_text = "chưa xác định" if installed is None else f"{installed / _GIB:.1f} GiB"
+        usable_text = "chưa xác định" if not usable else f"{usable / _GIB:.1f} GiB"
+        if language == "vi":
+            warnings.append(
+                "Cảnh báo: cấu hình khuyến nghị là RAM lắp đặt từ 16 GB (16 GiB) và ít nhất 8 GiB RAM "
+                f"Windows sử dụng được. RAM lắp đặt: {installed_text}; Windows sử dụng được: {usable_text}. "
+                "Việc tải/cài không bị chặn; máy yếu sẽ chạy chậm hơn."
+            )
+        else:
+            installed_en = "unknown" if installed is None else f"{installed / _GIB:.1f} GiB"
+            usable_en = "unknown" if not usable else f"{usable / _GIB:.1f} GiB"
+            warnings.append(
+                "Warning: recommended configuration is 16 GB installed RAM (16 GiB DIMM capacity) and at least "
+                f"8 GiB OS-usable RAM; installed: {installed_en}; OS-usable: {usable_en}. "
+                "Download/install is not blocked; a weaker machine will run more slowly.")
+    return " ".join(warnings)
+
+
 def validate_processing_device(
     preference: str,
     capabilities: HardwareCapabilities | None = None,
     *, language: str = "en",
 ) -> tuple[bool, str]:
+    """Validate a device choice -- now warning-only, never a gate.
+
+    Always returns True: downloading/installing any model and choosing a
+    device are never refused on hardware grounds. The message carries the
+    recommendation warning (from :func:`hardware_warning`) when the machine
+    is below the recommended config, otherwise the usual ready message.
+    Run-time safety is handled by the CPU fallback in model_choices and by
+    the runtime profile, not by refusing here.
+    """
     preference = preference if preference in _DEVICE_PREFERENCES else "cpu"
-    capabilities = capabilities or detect_hardware_capabilities()
-    if preference == "gpu":
-        if not capabilities.cuda_available:
-            return False, "Không phát hiện GPU NVIDIA tương thích CUDA." if language == "vi" else "CUDA-compatible NVIDIA GPU was not detected."
-        if capabilities.total_vram_bytes < _MIN_GPU_VRAM_BYTES:
-            available = capabilities.total_vram_bytes / _GIB
-            return False, (f"Cần GPU NVIDIA CUDA có ít nhất 3.5 GiB VRAM riêng (card 4 GB); hiện có {available:.1f} GiB." if language == "vi" else
-                f"GPU mode requires a CUDA NVIDIA card with at least 3.5 GiB dedicated VRAM (4 GB class); detected {available:.1f} GiB."
-            )
-    installed = getattr(capabilities, "installed_ram_bytes", None)
+    capabilities = capabilities or hardware_capabilities()
+    warning = hardware_warning(preference, capabilities, language=language)
+    if warning:
+        return True, warning
     usable = capabilities.total_ram_bytes
-    installed_text = "chưa xác định" if installed is None else f"{installed / _GIB:.1f} GiB"
-    usable_text = "chưa xác định" if not usable else f"{usable / _GIB:.1f} GiB"
-    if not _ram_capacity_supported(capabilities):
-        if language == "vi":
-            return False, (
-                f"BeUp cần RAM lắp đặt từ 16 GB (16 GiB) và ít nhất 8 GiB RAM Windows sử dụng được. "
-                f"RAM lắp đặt: {installed_text}; Windows sử dụng được: {usable_text}. "
-                "Kiểm tra lại cấu hình/bộ nhớ dành riêng cho phần cứng nếu số liệu chưa đúng."
-            )
-        installed_en = "unknown" if installed is None else f"{installed / _GIB:.1f} GiB"
-        usable_en = "unknown" if not usable else f"{usable / _GIB:.1f} GiB"
-        return False, (
-            "BeUp requires 16 GB installed RAM (16 GiB DIMM capacity) and at least 8 GiB OS-usable RAM; "
-            f"installed: {installed_en}; OS-usable: {usable_en}. Check hardware memory detection/reservation."
-        )
     if preference == "gpu":
         return True, (f"GPU sẵn sàng: {capabilities.cuda_name}, {capabilities.total_vram_bytes / _GIB:.1f} GiB VRAM." if language == "vi" else
                       f"GPU ready: {capabilities.cuda_name}, {capabilities.total_vram_bytes / _GIB:.1f} GiB VRAM.")

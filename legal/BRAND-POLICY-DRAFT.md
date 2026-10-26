@@ -1,7 +1,7 @@
 # Official identity and brand — DRAFT
 
 **DRAFT — NOT IN FORCE.** BeUp was created by Mach Hong Hai. Official project
-links are https://github.com/MachHongHai/HaizFlow and https://haizflow.pages.dev/.
+links are https://github.com/xayza/RepoReup.
 
 Proposed policy: truthful references, reviews, tutorials and links may identify
 BeUp. Do not use the name or logo to imply an unofficial installer,

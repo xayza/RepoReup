@@ -73,9 +73,20 @@ _VERIFIED_ALIGNMENT_MODELS = ALIGNMENT_MODELS
 def _whisper_model_source(model_name: str = "small") -> tuple[str, bool]:
     """Resolve only the checksum-verified model installed by Resource Manager."""
     normalized = str(model_name or "small").strip().lower()
-    if normalized not in {"small", "large-v3-turbo"}:
+    if normalized not in {"small", "large-v3-turbo", "medium", "large-v3", "distil-large-v3"}:
         raise RuntimeError(f"Unsupported Whisper model: {model_name}")
     candidate = Path(MODELS_DIR) / "whisper" / normalized
+    if normalized in {"medium", "large-v3", "distil-large-v3"}:
+        # Unverified catalog model (see model_bootstrap): no pinned hash
+        # exists, so loading requires only the presence of the files the
+        # loader needs. The model picker must label it unverified.
+        missing = [name for name in ("config.json", "model.bin", "tokenizer.json")
+                   if not (candidate / name).is_file() or (candidate / name).stat().st_size == 0]
+        if missing:
+            raise RuntimeError(
+                "Whisper is missing or corrupted. Return to the model setup screen and retry the download."
+            )
+        return str(candidate), True
     try:
         verifier = verify_whisper_turbo_model if normalized == "large-v3-turbo" else verify_whisper_model
         return str(verifier(candidate)), True
@@ -118,7 +129,7 @@ def warm_whisperx_model(model_name: str = "small", *, device_preference: str | N
     """Load the ASR model once in the background so the first video starts promptly."""
     global _WARM_ASR_MODEL, _WARM_DEVICE, _WARM_MODEL_NAME
     model_name = str(model_name or "small").strip().lower()
-    if model_name not in {"small", "large-v3-turbo"}:
+    if model_name not in {"small", "large-v3-turbo", "medium", "large-v3", "distil-large-v3"}:
         raise RuntimeError(f"Unsupported Whisper model: {model_name}")
     with _MODEL_LOCK:
         from beup.core.hardware import cpu_runtime_profile

@@ -40,7 +40,8 @@ def test_installed_16gb_reserved_memory_passes_cpu_and_gpu_capacity():
     four_gb = replace(gpu, total_vram_bytes=4 * GIB)
     assert hardware.validate_processing_device("gpu", four_gb)[0]
     assert not four_gb.heavy_gpu_models_supported
-    assert not hardware.validate_processing_device("gpu", replace(gpu, total_vram_bytes=3 * GIB))[0]
+    # Warning-only now: a 3 GiB GPU is below recommendation but not blocked.
+    assert hardware.validate_processing_device("gpu", replace(gpu, total_vram_bytes=3 * GIB))[0]
     profile = hardware.runtime_profile_for(cpu, "cpu")
     assert (profile.key, profile.whisper_batch_size, profile.cpu_threads) == ("cpu_low_memory", 2, 4)
     assert not profile.warm_hymt2_on_startup
@@ -48,9 +49,9 @@ def test_installed_16gb_reserved_memory_passes_cpu_and_gpu_capacity():
 
 
 @pytest.mark.parametrize("installed,usable", [(8, 7.9), (12, 11.5), (16, 6), (None, None), (None, 13.9)])
-def test_insufficient_or_unverified_capacity_is_not_eligible(installed, usable):
+def test_insufficient_or_unverified_capacity_warns_but_is_not_blocked(installed, usable):
     compatible, reason = hardware.validate_processing_device("cpu", caps(installed=installed, usable=usable))
-    assert not compatible
+    assert compatible
     assert "16 GB" in reason
     assert "OS-usable" in reason
 

@@ -13,7 +13,7 @@ from beup.config import HYMT2_MODEL_REVISION
 from beup.core.hardware import (
     configure_processing_device,
     configure_translation_model,
-    detect_hardware_capabilities,
+    refresh_hardware_capabilities,
     processing_device_preference,
     runtime_profile,
     translation_model_preference,
@@ -269,7 +269,8 @@ def _ensure_gpu_available(stage: str) -> None:
     profile = runtime_profile()
     if not profile.cuda_available:
         return
-    capabilities = detect_hardware_capabilities()
+    # A disappearance check needs a fresh probe, not the cached UI snapshot.
+    capabilities = refresh_hardware_capabilities()
     if not capabilities.cuda_available or capabilities.ac_powered is False:
         reason = (
             "the NVIDIA GPU is no longer detected" if not capabilities.cuda_available else "AC power was disconnected"

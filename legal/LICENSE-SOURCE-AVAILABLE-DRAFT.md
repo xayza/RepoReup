@@ -8,7 +8,7 @@ This earlier proposal is retained for comparison, not application terms.
 Proposed identifier: `LicenseRef-BeUp-Source-Available-1.0` (custom; not
 OSI-approved). Proposed licensor: Mach Hong Hai, only for rights he owns or is
 expressly authorized to license. Official repository:
-https://github.com/MachHongHai/HaizFlow. Contact: machhonghaipr@gmail.com.
+https://github.com/xayza/RepoReup. Contact: machhonghaipr@gmail.com.
 
 ## 1. Scope and precedence
 

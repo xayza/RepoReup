@@ -160,7 +160,7 @@ ColumnLayout {
 
             Item {
                 Layout.preferredWidth: 96
-                Layout.preferredHeight: 36
+                Layout.preferredHeight: 40
 
                 StudioButton {
                     anchors.fill: parent

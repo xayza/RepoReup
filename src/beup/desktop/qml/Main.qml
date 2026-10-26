@@ -15,7 +15,11 @@ ApplicationWindow {
     visible: false
     flags: Qt.Window
     title: ""
-    color: Theme.window
+    // In wallpaper mode the window itself is transparent so the wallpaper
+    // image below can show through; otherwise it keeps the palette colour.
+    // When wallpaper mode has no readable wallpaper, Theme.wallpaperActive
+    // is false and this falls back to the dark palette window colour.
+    color: Theme.wallpaperActive ? "transparent" : Theme.window
     topPadding: 0
     leftPadding: 0
     rightPadding: 0
@@ -258,6 +262,47 @@ ApplicationWindow {
         target: UiMetrics
         property: "viewportHeight"
         value: root.height
+    }
+
+    // 2026 theme wiring: the persisted mode, the resolved Windows mode and
+    // the desktop wallpaper path flow from AppController into Theme, which
+    // then resolves every Theme.* colour from the active palette.
+    Binding {
+        target: Theme
+        property: "themeMode"
+        value: AppController.settingsTheme
+    }
+
+    Binding {
+        target: Theme
+        property: "systemThemeMode"
+        value: AppController.systemThemeMode
+    }
+
+    Binding {
+        target: Theme
+        property: "wallpaperSource"
+        value: AppController.desktopWallpaperUrl
+    }
+
+    // Desktop wallpaper background, only in wallpaper mode with a readable
+    // wallpaper.  Declared before the content column so it stays behind it;
+    // the scrim dims the image so text on top stays readable.
+    Image {
+        id: wallpaperBackground
+        anchors.fill: parent
+        visible: Theme.wallpaperActive
+        source: Theme.wallpaperSource
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: false
+    }
+
+    Rectangle {
+        id: wallpaperScrim
+        anchors.fill: parent
+        visible: Theme.wallpaperActive
+        color: Theme.wallpaperScrim
     }
 
     LazyDialogLoader {

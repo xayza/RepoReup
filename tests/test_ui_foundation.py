@@ -228,20 +228,35 @@ view.close()
             self.assertEqual(result.returncode, 0, f"DPI {scale}: {result.stdout}{result.stderr}")
 
     def test_warm_graphite_text_and_focus_contrast(self):
+        # Theme colours are now palette-dependent, so contrast is checked
+        # per palette (dark = original Warm Graphite, light = 2026 light
+        # palette) instead of against single literal Theme.* colours.
         theme = (QML_DIR / "Theme.qml").read_text(encoding="utf-8")
-        colors = dict(re.findall(r"readonly property color (\w+): \"(#[0-9A-Fa-f]{6})\"", theme))
-        for foreground, background, minimum in (
-            ("text", "window", 4.5),
-            ("text", "surface", 4.5),
-            ("textMuted", "surface", 4.5),
-            ("textOnAccent", "interactive", 4.5),
-            ("focus", "window", 3.0),
-        ):
-            self.assertGreaterEqual(
-                self._contrast_ratio(colors[foreground], colors[background]),
-                minimum,
-                f"{foreground} on {background}",
+        shared = dict(re.findall(r"readonly property color (\w+): \"(#[0-9A-Fa-f]{6})\"", theme))
+        for palette_name in ("darkPalette", "lightPalette"):
+            match = re.search(
+                rf"readonly property QtObject {palette_name}: QtObject \{{(.*?)\n    \}}",
+                theme,
+                re.S,
             )
+            self.assertIsNotNone(match, f"{palette_name} missing from Theme.qml")
+            colors = dict(
+                re.findall(r"property color (\w+): \"(#[0-9A-Fa-f]{6})\"", match.group(1))
+            )
+            colors["textOnAccent"] = shared["textOnAccent"]
+            colors["interactive"] = shared["interactive"]
+            for foreground, background, minimum in (
+                ("text", "window", 4.5),
+                ("text", "surface", 4.5),
+                ("textMuted", "surface", 4.5),
+                ("textOnAccent", "interactive", 4.5),
+                ("focus", "window", 3.0),
+            ):
+                self.assertGreaterEqual(
+                    self._contrast_ratio(colors[foreground], colors[background]),
+                    minimum,
+                    f"{palette_name}: {foreground} on {background}",
+                )
 
     def test_project_browser_filters_and_sorts_without_copying_rows(self):
         source = ProjectListModel()

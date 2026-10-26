@@ -1425,7 +1425,8 @@ class BeUpController(QObject):
     @speechRecognitionModel.setter
     def speechRecognitionModel(self, value):
         requested = str(value or "small").strip().lower()
-        if requested not in {"small", "small-cpu", "small-gpu", "large-v3-turbo"}:
+        if requested not in {"small", "small-cpu", "small-gpu", "large-v3-turbo",
+                             "medium", "large-v3", "distil-large-v3"}:
             requested = "small"
         if requested in {"small-gpu", "large-v3-turbo"} and getattr(self, "_settings_processing_device", "cpu") != "gpu":
             self._show_app_alert("Đang dùng chế độ CPU", "Chọn Whisper CPU hoặc chuyển sang GPU trong Cài đặt → Chung.", "warning")
@@ -1465,6 +1466,16 @@ class BeUpController(QObject):
         # authoritative result instead of permanently disabling Turbo.
         gpu_available = BeUpController._project_gpu_available(self)
         turbo_available = BeUpController._heavy_gpu_models_available(self)
+        # Expanded catalog entries are device-agnostic and never gated by
+        # hardware: they are always listed as available (their per-model
+        # recommendation comes from model_choices.MODEL_RECOMMENDATIONS,
+        # exposed to QML through the resource-pack snapshot). Unverified
+        # entries must be labelled as such by the picker.
+        extra = [
+            {"value": "medium", "label": "Whisper Medium", "available": True},
+            {"value": "large-v3", "label": "Whisper Large v3", "available": True},
+            {"value": "distil-large-v3", "label": "Whisper Distil Large v3", "available": True},
+        ]
         if getattr(self, "_settings_language", "en") == "vi":
             return [
                 {"value": "small-cpu", "label": "Whisper Small · CPU", "available": True},
@@ -1474,6 +1485,7 @@ class BeUpController(QObject):
                     "label": "Whisper Turbo · GPU NVIDIA",
                     "available": turbo_available,
                 },
+                *extra,
             ]
         return [
             {"value": "small-cpu", "label": "Whisper Small · CPU", "available": True},
@@ -1483,15 +1495,16 @@ class BeUpController(QObject):
                 "label": "Whisper Turbo · NVIDIA GPU",
                 "available": turbo_available,
             },
+            *extra,
         ]
 
     @Property(int, notify=speechRecognitionModelChanged)
     def speechRecognitionModelIndex(self):
-        if self._speech_recognition_model == "large-v3-turbo":
-            return 2
-        return 1 if self._speech_recognition_model == "small-gpu" or (
-            self._speech_recognition_model == "small" and self._settings_processing_device == "gpu"
-        ) else 0
+        _order = {"small-cpu": 0, "small-gpu": 1, "large-v3-turbo": 2,
+                  "medium": 3, "large-v3": 4, "distil-large-v3": 5}
+        if self._speech_recognition_model in _order:
+            return _order[self._speech_recognition_model]
+        return 1 if self._speech_recognition_model == "small" and self._settings_processing_device == "gpu" else 0
 
     @Property(str, notify=languageOptionsChanged)
     def targetLanguageLabel(self):
@@ -3123,6 +3136,27 @@ class BeUpController(QObject):
         return self._settings_theme
 
     @Property(str, notify=settingsChanged)
+    def systemThemeMode(self):
+        """Resolved Windows light/dark mode ("light"/"dark", cached)."""
+        from beup.desktop.system_theme import cached_system_theme_mode
+
+        return cached_system_theme_mode()
+
+    @Property(str, notify=settingsChanged)
+    def desktopWallpaperUrl(self):
+        """File URL of the Windows desktop wallpaper, or "" when unavailable."""
+        from beup.desktop.system_theme import cached_desktop_wallpaper_path
+
+        path = cached_desktop_wallpaper_path()
+        if not path:
+            return ""
+        return QUrl.fromLocalFile(path).toString()
+
+    @Slot(str, result=bool)
+    def setThemeMode(self, mode):
+        return BeUpController._settings_delegate_for(self).set_theme_mode(str(mode))
+
+    @Property(str, notify=settingsChanged)
     def settingsLanguage(self):
         return self._settings_language
 
@@ -3300,10 +3334,10 @@ class BeUpController(QObject):
         resource_packs = getattr(self, "_resource_packs", None)
         if resource_packs is not None:
             pack_id = "model-hymt2-gpu" if normalized == "full" else "model-hymt2-cpu"
-            compatible, reason = resource_packs._hardware_compatibility(pack_id)
-            if not compatible:
-                self._show_app_alert("Máy không đáp ứng", reason, "warning")
-                return
+            # Hardware advice only (always compatible now): warn, continue.
+            _compatible, reason = resource_packs._hardware_compatibility(pack_id)
+            if reason:
+                self._show_app_alert("Cấu hình khuyến nghị", reason, "warning")
             if resource_packs.manager.status(pack_id) not in {"installed", "bundled"}:
                 self._show_app_alert(
                     "Thiếu model dịch",
@@ -4684,24 +4718,25 @@ class BeUpController(QObject):
             from beup.services.subtitle_language import manual_subtitle_language
 
             pack_context["language"] = manual_subtitle_language(video)
-        from beup.core.model_choices import gpu_choice_blocked
+        from beup.core.model_choices import gpu_choice_warning
 
-        if gpu_choice_blocked(pack_context["device"],
+        _tool_warning = gpu_choice_warning(pack_context["device"],
                               recognition=pack_context["model"] if tool_id == "translation" and not imported_srt else "small",
                               translation=pack_context["translation_model"] if tool_id == "translation" else "auto",
-                              voice=pack_context["provider"] if tool_id == "voice" else "omnivoice"):
-            self.appAlertRequested.emit("Đang dùng chế độ CPU", "Chọn model CPU hoặc chuyển sang GPU trong Cài đặt → Chung.", "warning")
-            return False
+                              voice=pack_context["provider"] if tool_id == "voice" else "omnivoice")
+        if _tool_warning:
+            # Dismissable warning only: continue; the run-time fallback
+            # converts the GPU choice to its CPU equivalent when running.
+            self.appAlertRequested.emit("Đang dùng chế độ CPU", _tool_warning, "warning")
         missing: list[str] = []
         resource_packs = getattr(self, "_resource_packs", None)
         resource_manager = getattr(resource_packs, "manager", None)
         if resource_manager is not None:
             for capability in capabilities:
                 for pack_id in resource_manager.required_packs(capability, pack_context):
-                    compatible, reason = resource_packs._hardware_compatibility(pack_id)
-                    if not compatible:
-                        self.appAlertRequested.emit("Máy không đáp ứng", reason, "warning")
-                        return False
+                    _compatible, reason = resource_packs._hardware_compatibility(pack_id)
+                    if reason:
+                        self.appAlertRequested.emit("Cấu hình khuyến nghị", reason, "warning")
                 missing.extend(resource_manager.missing_packs(capability, pack_context))
         missing = list(dict.fromkeys(missing))
         if missing:
@@ -5294,7 +5329,7 @@ class BeUpController(QObject):
 
     def _apply_app_settings_snapshot(self, values: dict[str, str]) -> bool:
         return self._settings_controller.apply(
-            "graphite",
+            str(values.get("theme") or getattr(self, "_settings_theme", "system")),
             str(values.get("language") or "vi"),
             str(values.get("translation_model") or "auto"),
         )

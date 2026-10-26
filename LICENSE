@@ -1,7 +1,7 @@
-# Giấy phép mã nguồn công khai HaizFlow — phiên bản 1.0
+# Giấy phép mã nguồn công khai BeUp — phiên bản 1.0
 
 Bản quyền (c) 2026 Mạch Hồng Hải.
-LicenseRef-HaizFlow-Source-Available-1.0.
+LicenseRef-BeUp-Source-Available-1.0.
 Giấy phép có hiệu lực từ ngày 01/10/2026. Đây không phải giấy phép nguồn mở OSI.
 Tiếng Việt được đặt trước và được ưu tiên nếu hai bản có khác biệt, trong
 giới hạn pháp luật bắt buộc và các giấy phép thành phần.
@@ -9,7 +9,7 @@ giới hạn pháp luật bắt buộc và các giấy phép thành phần.
 ## 1. Phạm vi và thứ tự ưu tiên
 
 “Bên cấp phép” là Mạch Hồng Hải. Phần được cấp phép là mã ứng dụng, tài liệu,
-tập lệnh và kiểm thử HaizFlow thuộc
+tập lệnh và kiểm thử BeUp thuộc
 quyền sở hữu Mạch Hồng Hải, theo legal/rights-inventory.json. Không gồm thư
 viện, codec, model, checkpoint, font, icon, mã vendor hay tài sản có điều khoản
 riêng. Các thông báo và giấy phép riêng vẫn áp dụng. Công khai repository
@@ -45,7 +45,7 @@ Bên cấp phép không xác lập quyền sở hữu đối với nội dung đ
 video đầu ra chỉ từ việc sử dụng ứng dụng. Người sử dụng được khai thác,
 phân phối và tạo doanh thu từ nội dung trong phạm vi quyền hợp pháp của mình.
 Quyền đối với nội dung, giọng nói, âm nhạc, nhãn hiệu, mô hình và đầu ra vẫn
-được áp dụng. Giấy phép HaizFlow không thay thế hoặc loại bỏ điều kiện phi
+được áp dụng. Giấy phép BeUp không thay thế hoặc loại bỏ điều kiện phi
 thương mại của mô hình có giấy phép riêng.
 
 ## 4. Những quyền không được cấp đối với phần mềm
@@ -62,9 +62,9 @@ nếu chưa có chấp thuận bằng văn bản của Bên cấp phép:
   quyền truy cập có thu phí hoặc dịch vụ xử lý được vận hành cho bên thứ ba,
   ngoài hoạt động sản xuất nội dung được cho phép tại Mục 3.
 - Xóa, che giấu hoặc sửa thông báo bản quyền; mạo nhận tác giả, chủ sở hữu,
-  nhà phát hành hoặc quan hệ bảo trợ chính thức của HaizFlow.
+  nhà phát hành hoặc quan hệ bảo trợ chính thức của BeUp.
 
-Việc sử dụng HaizFlow để sản xuất video và nội dung theo Mục 3 không bị coi
+Việc sử dụng BeUp để sản xuất video và nội dung theo Mục 3 không bị coi
 là phân phối hoặc thương mại hóa phần mềm.
 
 Quyền phân phối hoặc thương mại hóa phần mềm bổ sung cần thỏa thuận bằng văn
@@ -76,7 +76,7 @@ thành phần có giấy phép riêng hoặc quyền được cấp độc lập
 
 Người sử dụng phải giữ nguyên thông tin tác giả và thông báo áp dụng; không
 được mạo nhận tác giả hoặc trình bày bản không chính thức là bản chính thức.
-Giấy phép không cấp quyền sử dụng tên hoặc biểu trưng HaizFlow ngoài phạm vi
+Giấy phép không cấp quyền sử dụng tên hoặc biểu trưng BeUp ngoài phạm vi
 nhận diện trung thực cần thiết cho việc sử dụng được phép. Việc sử dụng tên
 và biểu trưng không được gây nhầm lẫn về nguồn gốc, quan hệ bảo trợ hoặc nhà
 phát hành. Điều khoản này không khẳng định tình trạng đăng ký nhãn hiệu.
@@ -105,22 +105,22 @@ khoản sửa đổi chỉ áp dụng cho các phiên bản được xác địn
 Giấy phép này áp dụng cho Phần được cấp phép cung cấp kèm văn bản này, không
 áp dụng hồi tố để hạn chế quyền được cấp độc lập. Tài liệu được ghi nhận là
 dự thảo không làm phát sinh quyền hoặc nghĩa vụ hợp đồng.
-Repository: https://github.com/MachHongHai/HaizFlow
+Repository: https://github.com/xayza/RepoReup
 Liên hệ: machhonghaipr@gmail.com.
 
 ---
 
-# HaizFlow Source-Available License — version 1.0
+# BeUp Source-Available License — version 1.0
 
 Copyright (c) 2026 Mach Hong Hai.
-LicenseRef-HaizFlow-Source-Available-1.0. Effective date: 2026-10-01.
+LicenseRef-BeUp-Source-Available-1.0. Effective date: 2026-10-01.
 Not an OSI open-source license. Vietnamese precedes English and prevails on
 translation differences, subject to mandatory law and component licenses.
 
 ## 1. Scope and precedence
 
-“Covered Work” means HaizFlow source, documentation and application code
-identified as owned HaizFlow work in legal/rights-inventory.json. It excludes third-party libraries, codecs, models,
+“Covered Work” means BeUp source, documentation and application code
+identified as owned BeUp work in legal/rights-inventory.json. It excludes third-party libraries, codecs, models,
 checkpoints, fonts, icons and separately licensed contributions or assets.
 Possession of this repository does not establish exclusive ownership of all
 its contents. Notices and separate licenses remain applicable.
@@ -150,12 +150,12 @@ outside the Service. Independent licenses may separately permit such conduct.
 
 You may download an authorized application release, install it and use it
 without paying the licensor. Personal, business and monetized video production
-are permitted under the HaizFlow permission. You need not request permission
+are permitted under the BeUp permission. You need not request permission
 from Mach Hong Hai for each upload to YouTube, TikTok, Facebook or another
 platform. This permission does not license other people's media, voices,
 music, trademarks or model outputs; their applicable rights still govern.
 
-HaizFlow claims no ownership in your input media, projects or generated
+BeUp claims no ownership in your input media, projects or generated
 videos merely because you used it. You may use, distribute and monetize
 content to the extent you hold the necessary rights. In particular, a
 NonCommercial model license is not overridden by this permission.
@@ -174,7 +174,7 @@ consent:
   paid access or processing services operated for third parties, other than
   content production permitted under Section 3.
 - Removing, obscuring or altering copyright notices, or falsely claiming
-  authorship, ownership, official publisher status or endorsement by HaizFlow.
+  authorship, ownership, official publisher status or endorsement by BeUp.
 
 Video and content production permitted under Section 3 does not constitute
 redistribution or commercialization of the software itself.
@@ -190,7 +190,7 @@ imposed on those components or independently granted rights.
 
 Retain truthful authorship and applicable notices. Do not falsely claim
 authorship of another person's work or represent an unofficial build as an
-official HaizFlow release. No trademark license is granted beyond truthful
+official BeUp release. No trademark license is granted beyond truthful
 identification needed for permitted use. No assertion of a registered mark
 or exclusive worldwide trademark ownership is made. Name/logo use must not
 mislead users about origin, endorsement or publisher; statutory rights remain.
@@ -224,5 +224,5 @@ releases accepted under those terms, not retroactively to existing licenses.
 This license applies to the Covered Work supplied with this document. It does
 not retroactively restrict independently granted rights. Documents marked
 as drafts do not create contractual rights or obligations.
-Repository: https://github.com/MachHongHai/HaizFlow
+Repository: https://github.com/xayza/RepoReup
 Contact: machhonghaipr@gmail.com.

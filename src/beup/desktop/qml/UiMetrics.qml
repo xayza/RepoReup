@@ -13,7 +13,7 @@ QtObject {
     readonly property int sectionGap: compact ? 12 : 16
     readonly property int controlHeight: 32
     readonly property int compactControlHeight: 30
-    readonly property int primaryControlHeight: 34
+    readonly property int primaryControlHeight: 40
     readonly property int inspectorMinimum: 280
     readonly property int inspectorPreferred: compact ? 280 : wide ? 320 : 296
     readonly property int toolbarHeight: 36

@@ -447,28 +447,13 @@ class RuntimeDeviceController:
             host._pending_processing_device = ""
             return
 
-        compatible, message = validate_processing_device(preference)
-        if not compatible:
-            cpu_compatible, cpu_message = validate_processing_device("cpu")
-            if not cpu_compatible:
-                raise RuntimeError(cpu_message)
-            preference = "cpu"
-            host._settings_processing_device = "cpu"
-            host._processing_device_origin = "detected"
-            try:
-                desktop_settings.save_settings(
-                    {
-                        "theme": host._settings_theme,
-                        "language": host._settings_language,
-                        "processing_device": "cpu",
-                        "processing_device_origin": "detected",
-                    }
-                )
-            except OSError:
-                pass
-            video_store.log_to_video(
-                video_id, f"Requested GPU runtime is no longer safe: {message} Falling back to CPU."
-            )
+        # validate_processing_device is warning-only now: a below-recommendation
+        # machine keeps the requested device (the run-time CPU fallback in
+        # model_choices / runtime_profile handles actual execution), and the
+        # probe_runtime check below still falls back on a real GPU failure.
+        _compatible, message = validate_processing_device(preference)
+        if message and ("Cảnh báo" in message or "Warning" in message):
+            video_store.log_to_video(video_id, f"Hardware recommendation warning: {message}")
 
         probe = probe_runtime(preference)
         if not probe.ok and preference == "gpu":

@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from beup.core.model_choices import gpu_choice_blocked, models_for_device
+from beup.core.model_choices import gpu_choice_blocked, gpu_choice_warning, models_for_device
 from beup.core.vieneu_assets import MANIFEST
 from beup.core.vieneu_voices import VIENEU_VOICES, native_voice, sample_voice_id, speaker_voice
 from beup.desktop.presenters import voice_options_for_language
@@ -45,8 +45,10 @@ def test_one_shared_pack_and_explicit_device_routing():
     assert manager.definitions['model-vieneu'].download_size == sum(entry['size'] for entry in MANIFEST['assets'])
     assert all(len(entry['sha256']) == 64 for entry in MANIFEST['assets'])
     assert all('/resolve/main/' not in entry['url'] for entry in MANIFEST['assets'])
+    assert gpu_choice_warning('cpu', voice='vieneu-gpu')
+    assert gpu_choice_warning('gpu', voice='vieneu-gpu') == ''
     assert gpu_choice_blocked('cpu', voice='vieneu-gpu')
-    assert not gpu_choice_blocked('gpu', voice='vieneu-gpu')
+    assert gpu_choice_blocked('gpu', voice='vieneu-gpu') == ''
     choices = models_for_device('cpu', recognition='small-cpu', translation='q4', voice='vieneu-gpu')
     assert choices['tts_provider'] == 'vieneu'
 

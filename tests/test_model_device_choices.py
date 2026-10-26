@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from beup.core.model_choices import gpu_choice_blocked, models_for_device, project_model_defaults, project_recognition_choice, project_translation_choice, recognition_context
+from beup.core.model_choices import gpu_choice_blocked, gpu_choice_warning, models_for_device, project_model_defaults, project_recognition_choice, project_translation_choice, recognition_context
 from beup.core.hardware import HardwareCapabilities
 from beup.desktop.project_import_controller import ProjectImportController
 from beup.desktop.qml_controller import BeUpController
@@ -145,13 +145,15 @@ def test_opened_legacy_project_warms_same_turbo_choice_as_gpu_ui():
 def test_gpu_mode_allows_explicit_cpu_model_without_warming_gpu_instead():
     assert recognition_context("small-cpu", "gpu") == {"model": "small", "device": "cpu"}
     assert recognition_context("small-gpu", "gpu") == {"model": "small", "device": "gpu"}
-    assert not gpu_choice_blocked("gpu", recognition="small-cpu", translation="q4", voice="omnivoice")
+    assert gpu_choice_warning("gpu", recognition="small-cpu", translation="q4", voice="omnivoice") == ""
+    assert gpu_choice_blocked("gpu", recognition="small-cpu", translation="q4", voice="omnivoice") == ""
 
 
 @pytest.mark.parametrize("choice", ["small-gpu", "large-v3-turbo"])
-def test_cpu_mode_rejects_gpu_recognition(choice):
-    with pytest.raises(ValueError, match="CPU"):
-        recognition_context(choice, "cpu")
+def test_cpu_mode_falls_back_for_gpu_recognition(choice):
+    # No gate anymore: GPU choices warn and fall back to Small on CPU.
+    assert recognition_context(choice, "cpu") == {"model": "small", "device": "cpu"}
+    assert gpu_choice_warning("cpu", recognition=choice)
     assert gpu_choice_blocked("cpu", recognition=choice)
 
 

@@ -5,13 +5,22 @@ import threading
 from pathlib import Path
 
 from beup.config import RUNTIME_DATA_DIR
+from beup.desktop.system_theme import (
+    DEFAULT_THEME_MODE,
+    THEME_MODES,
+    normalize_theme_mode,
+)
 
 
 SETTINGS_PATH = Path(RUNTIME_DATA_DIR) / "desktop-settings.json"
 DEFAULT_SETTINGS = {
     "default_project_directory": "",
     "last_export_directory": "",
-    "theme": "graphite",
+    # Theme modes (2026): "light" (Sáng), "dark" (Tối),
+    # "system" (Theo hệ thống — Windows light/dark) and
+    # "wallpaper" (Theo hình nền máy tính).  The legacy single-palette
+    # value "graphite" normalizes to "dark", which is that same palette.
+    "theme": DEFAULT_THEME_MODE,
     "language": "vi",
     "processing_device": "cpu",
     "processing_device_origin": "detected",
@@ -70,8 +79,9 @@ def load_settings() -> dict:
     if settings.get("language") not in {"en", "vi"}:
         settings["language"] = DEFAULT_SETTINGS["language"]
         migrate_legacy_settings = True
-    if settings.get("theme") != "graphite":
-        settings["theme"] = "graphite"
+    normalized_theme = normalize_theme_mode(settings.get("theme"))
+    if settings.get("theme") != normalized_theme:
+        settings["theme"] = normalized_theme
         migrate_legacy_settings = True
     if settings.get("translation_model") not in {"auto", "q4", "full"}:
         settings["translation_model"] = "auto"
@@ -114,10 +124,9 @@ def save_settings(settings: dict) -> dict:
     normalized = {
         "default_project_directory": str(merged.get("default_project_directory") or ""),
         "last_export_directory": str(merged.get("last_export_directory") or ""),
-        # Theme switching was removed in favour of one production palette.
-        # Always normalize legacy dark/light preferences so old installations
-        # cannot silently reintroduce a second appearance.
-        "theme": "graphite",
+        # Theme modes are validated against THEME_MODES; the legacy
+        # "graphite" value maps to "dark" (the same Warm Graphite palette).
+        "theme": normalize_theme_mode(merged.get("theme")),
         "language": merged.get("language") if merged.get("language") in {"en", "vi"} else DEFAULT_SETTINGS["language"],
         "processing_device": (
             merged.get("processing_device")
