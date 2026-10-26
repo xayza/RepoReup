@@ -7,8 +7,8 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from haizflow.pipeline import transcribe as asr
-from haizflow.services.recognition_progress import RecognitionProgress
+from beup.pipeline import transcribe as asr
+from beup.services.recognition_progress import RecognitionProgress
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def runtime(tmp_path, monkeypatch):
     progress = tmp_path / "recognition-progress.json"
     profile = SimpleNamespace(cuda_available=False, cpu_threads=2, whisper_batch_size=1)
     monkeypatch.setattr(asr, "runtime_profile", lambda: profile)
-    monkeypatch.setattr("haizflow.core.hardware.cpu_runtime_profile", lambda value, **_: value)
+    monkeypatch.setattr("beup.core.hardware.cpu_runtime_profile", lambda value, **_: value)
     monkeypatch.setattr(asr, "_WARM_ASR_MODEL", None)
     monkeypatch.setattr(asr, "_load_whisper_model", Mock(return_value=object()))
     monkeypatch.setattr(asr, "_constrain_four_gb_vad", Mock())
@@ -114,7 +114,7 @@ def test_checkpoint_model_language_identity_and_invalid_rows(runtime):
 
 
 def test_engine_file_protocol_resumes_with_matching_checkpoint_contract(runtime, tmp_path):
-    from haizflow.engine import main
+    from beup.engine import main
 
     request_path = tmp_path / "request.json"
     response_path = tmp_path / "response.json"
@@ -132,12 +132,12 @@ def test_engine_file_protocol_resumes_with_matching_checkpoint_contract(runtime,
 
 
 def test_core_forwards_phase_contract_to_engine(runtime, monkeypatch):
-    from haizflow.pipeline import manual_tools
+    from beup.pipeline import manual_tools
 
     worker = Mock(return_value={"segments": [], "detected_language": "en"})
-    monkeypatch.setattr("haizflow.core.hardware.processing_device_preference", lambda: "gpu")
-    monkeypatch.setattr("haizflow.core.model_choices.recognition_context", lambda *_: {"model": "small", "device": "gpu"})
-    monkeypatch.setattr("haizflow.services.external_tasks.run_external_task", worker)
+    monkeypatch.setattr("beup.core.hardware.processing_device_preference", lambda: "gpu")
+    monkeypatch.setattr("beup.core.model_choices.recognition_context", lambda *_: {"model": "small", "device": "gpu"})
+    monkeypatch.setattr("beup.services.external_tasks.run_external_task", worker)
     monkeypatch.setattr(manual_tools.video_store, "log_to_video", Mock())
     manual_tools.transcribe(str(runtime.audio), str(runtime.output), "auto", "fixture",
                             checkpoint_path=str(runtime.progress), checkpoint_key="generation-1")
@@ -146,14 +146,14 @@ def test_core_forwards_phase_contract_to_engine(runtime, monkeypatch):
 
 
 def test_completed_phase_does_not_start_or_import_external_asr_engine(runtime, monkeypatch):
-    from haizflow.pipeline import manual_tools
+    from beup.pipeline import manual_tools
 
     expected = runtime.run()
     runtime.output.unlink()
     worker = Mock(side_effect=AssertionError("ASR worker started"))
-    monkeypatch.setattr("haizflow.core.hardware.processing_device_preference", lambda: "gpu")
-    monkeypatch.setattr("haizflow.core.model_choices.recognition_context", lambda *_: {"model": "small", "device": "gpu"})
-    monkeypatch.setattr("haizflow.services.external_tasks.run_external_task", worker)
+    monkeypatch.setattr("beup.core.hardware.processing_device_preference", lambda: "gpu")
+    monkeypatch.setattr("beup.core.model_choices.recognition_context", lambda *_: {"model": "small", "device": "gpu"})
+    monkeypatch.setattr("beup.services.external_tasks.run_external_task", worker)
     monkeypatch.setattr(manual_tools.video_store, "log_to_video", Mock())
     result = manual_tools.transcribe(str(runtime.audio), str(runtime.output), "auto", "fixture",
                                     checkpoint_path=str(runtime.progress), checkpoint_key="generation-1")

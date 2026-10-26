@@ -7,10 +7,10 @@ import numpy as np
 import pytest
 from PySide6.QtGui import QGuiApplication
 
-from haizflow.desktop.manual_preview_audio_controller import ManualPreviewAudioController
-from haizflow.pipeline import manual_tools
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import manual_artifacts
+from beup.desktop.manual_preview_audio_controller import ManualPreviewAudioController
+from beup.pipeline import manual_tools
+from beup.schemas.video import VideoConfig
+from beup.services import manual_artifacts
 
 _APP = None
 
@@ -97,7 +97,7 @@ def test_reopen_fitted_voice_maps_pcm_without_decode_or_silence_trimming(tmp_pat
     try:
         reopened._pcm_cache_directory = directory
         with patch.object(reopened, '_decode_to_pcm', side_effect=AssertionError('Must not decode')), \
-                patch('haizflow.utils.audio.AudioSegment.from_file', side_effect=AssertionError('Must not trim again')):
+                patch('beup.utils.audio.AudioSegment.from_file', side_effect=AssertionError('Must not trim again')):
             samples = reopened._decode(source, duration=1000)
             assert isinstance(samples, np.memmap) and len(samples) > 0
     finally:

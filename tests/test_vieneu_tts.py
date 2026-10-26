@@ -9,14 +9,14 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from haizflow.core.model_choices import gpu_choice_blocked, models_for_device
-from haizflow.core.vieneu_assets import MANIFEST
-from haizflow.core.vieneu_voices import VIENEU_VOICES, native_voice, sample_voice_id, speaker_voice
-from haizflow.desktop.presenters import voice_options_for_language
-from haizflow.pipeline import tts, vieneu_tts
-from haizflow.schemas.video import VideoConfig
-from haizflow.services.resource_packs import ENGINE_REQUIRED_COMMANDS, ResourcePackError, ResourcePackManager
-from haizflow.services.video_store import _migrate_video_metadata
+from beup.core.model_choices import gpu_choice_blocked, models_for_device
+from beup.core.vieneu_assets import MANIFEST
+from beup.core.vieneu_voices import VIENEU_VOICES, native_voice, sample_voice_id, speaker_voice
+from beup.desktop.presenters import voice_options_for_language
+from beup.pipeline import tts, vieneu_tts
+from beup.schemas.video import VideoConfig
+from beup.services.resource_packs import ENGINE_REQUIRED_COMMANDS, ResourcePackError, ResourcePackManager
+from beup.services.video_store import _migrate_video_metadata
 
 
 @pytest.mark.parametrize('provider', ['vieneu', 'vieneu-gpu'])
@@ -119,7 +119,7 @@ def test_manual_and_auto_dispatch_to_vieneu_not_omnivoice(tmp_path, provider, de
     with (patch.object(tts, 'get_video', return_value=SimpleNamespace(files={}, speaker_mode='single')),
           patch.object(tts, 'log_to_video'), patch.object(tts, '_level_voice_peers', return_value=set()),
           patch.object(vieneu_tts, 'synthesize_batch_to_mp3', side_effect=generate) as run,
-          patch('haizflow.pipeline.omnivoice_tts.synthesize_batch_to_mp3') as wrong):
+          patch('beup.pipeline.omnivoice_tts.synthesize_batch_to_mp3') as wrong):
         tts.generate_voice_parts(str(source), str(tmp_path), 'vieneu:Hải Đăng', 'test', provider=provider)
     assert run.call_count == 1 and not wrong.called
     assert output.exists()
@@ -159,8 +159,8 @@ def test_multiple_speakers_uses_native_mapping_without_mutating_source_cache(tmp
 
     with (patch.object(tts, 'get_video', return_value=video), patch.object(tts, 'log_to_video'),
           patch.object(tts, '_level_voice_peers', return_value=set()),
-          patch('haizflow.pipeline.speaker_identity.prepare_speakers', return_value=source),
-          patch('haizflow.pipeline.speaker_identity._valid_map', return_value=True),
+          patch('beup.pipeline.speaker_identity.prepare_speakers', return_value=source),
+          patch('beup.pipeline.speaker_identity._valid_map', return_value=True),
           patch.object(vieneu_tts, 'synthesize_batch_to_mp3', side_effect=run)):
         tts.generate_voice_parts(str(subtitles), str(tmp_path), selection, 'test', provider=provider)
     assert [item['voice'] for item in queued] == ['vieneu:Hải Đăng', 'vieneu:Trúc Ly']
@@ -169,8 +169,8 @@ def test_multiple_speakers_uses_native_mapping_without_mutating_source_cache(tmp
 
 @pytest.mark.parametrize('provider', ['vieneu', 'vieneu-gpu'])
 def test_multispeaker_long_path_reaches_synthesis_and_reuses_source_map(tmp_path, provider):
-    from haizflow.pipeline import speaker_identity
-    from haizflow.utils import atomic_file
+    from beup.pipeline import speaker_identity
+    from beup.utils import atomic_file
 
     directory = tmp_path / ('d' * (175 - len(str(tmp_path)) - 1))
     directory.mkdir()
@@ -206,8 +206,8 @@ def test_multispeaker_long_path_reaches_synthesis_and_reuses_source_map(tmp_path
 
     with (patch.object(atomic_file.tempfile, 'mkstemp', side_effect=legacy_mkstemp),
           patch.object(speaker_identity, 'verify_model'),
-          patch('haizflow.services.external_tasks.run_external_task', side_effect=identify) as engine,
-          patch('haizflow.services.external_engine.shared_external_engine_pool'),
+          patch('beup.services.external_tasks.run_external_task', side_effect=identify) as engine,
+          patch('beup.services.external_engine.shared_external_engine_pool'),
           patch.object(tts, 'get_video', return_value=video), patch.object(tts, 'log_to_video'),
           patch.object(tts, '_level_voice_peers', return_value=set()),
           patch.object(vieneu_tts, 'synthesize_batch_to_mp3', side_effect=synthesize)):
@@ -247,7 +247,7 @@ def test_gpu_without_cuda_is_blocked_not_silently_cpu(tmp_path):
 
 def test_core_import_stays_lightweight():
     result = subprocess.run([sys.executable, '-c',
-        "import sys; import haizflow.pipeline.vieneu_tts; "
+        "import sys; import beup.pipeline.vieneu_tts; "
         "assert not any(x in sys.modules for x in ('torch','vieneu','sea_g2p','soundfile'))"],
         capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
@@ -261,8 +261,8 @@ def test_worker_has_encoding_headroom_and_no_expression_or_watermark_injection(t
     with (patch.object(vieneu_tts, 'verify_assets', return_value=tmp_path),
           patch.object(vieneu_tts, 'prepare_runtime', return_value=tmp_path),
           patch.object(vieneu_tts, '_load_model', return_value=model),
-          patch('haizflow.pipeline.tts_quality.validate_speech_waveform'),
-          patch('haizflow.pipeline.tts_quality.validate_short_phrase_audio')):
+          patch('beup.pipeline.tts_quality.validate_speech_waveform'),
+          patch('beup.pipeline.tts_quality.validate_short_phrase_audio')):
         vieneu_tts._worker(dict(root=str(tmp_path), device='cpu', status=str(status),
                                 items=[dict(text='Xin chào.', voice='vieneu:Hải Đăng', wav=str(output))]))
     waveform, rate = sf.read(output)
@@ -313,8 +313,8 @@ def test_clone_worker_uses_sdk_ref_audio_without_transcript_or_preset(tmp_path):
     with patch.object(vieneu_tts, 'verify_assets', return_value=tmp_path), \
             patch.object(vieneu_tts, 'prepare_runtime', return_value=tmp_path), \
             patch.object(vieneu_tts, '_load_model', return_value=model), \
-            patch('haizflow.pipeline.tts_quality.validate_speech_waveform'), \
-            patch('haizflow.pipeline.tts_quality.validate_short_phrase_audio'):
+            patch('beup.pipeline.tts_quality.validate_speech_waveform'), \
+            patch('beup.pipeline.tts_quality.validate_short_phrase_audio'):
         vieneu_tts._worker(dict(root=str(tmp_path), device='cpu', status=str(tmp_path / 'status.json'),
             items=[dict(text='Xin chào.', voice='vieneu:clone', reference_path=str(reference),
                         wav=str(tmp_path / 'out.wav'))]))

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     engine = QQmlEngine()
     messages = []
     engine.warnings.connect(lambda errors: messages.extend(e.toString() for e in errors))
-    directory = Path(__file__).resolve().parents[1] / "src/haizflow/desktop/qml"
+    directory = Path(__file__).resolve().parents[1] / "src/beup/desktop/qml"
     component = QQmlComponent(engine)
     component.setData(f'''import QtQuick
 import QtQuick.Controls.Basic

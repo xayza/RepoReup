@@ -14,11 +14,11 @@ from PySide6.QtQml import QQmlComponent, QQmlEngine, QQmlExpression
 from PySide6.QtQuick import QQuickItem, QQuickWindow
 from PySide6.QtTest import QTest
 
-from haizflow.desktop import manual_preview_audio_controller as pcm
-from haizflow.desktop.subtitle_overlay_renderer import SubtitleOverlayRenderer
-from haizflow.utils.ffmpeg import _binary
+from beup.desktop import manual_preview_audio_controller as pcm
+from beup.desktop.subtitle_overlay_renderer import SubtitleOverlayRenderer
+from beup.utils.ffmpeg import _binary
 
-QML = Path(__file__).parents[1] / "src/haizflow/desktop/qml"
+QML = Path(__file__).parents[1] / "src/beup/desktop/qml"
 
 
 class BufferedSink:

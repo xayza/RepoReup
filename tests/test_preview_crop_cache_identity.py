@@ -11,9 +11,9 @@ from unittest.mock import Mock, patch
 import pytest
 from PySide6.QtCore import QUrl
 
-from haizflow.desktop.editor_preview_controller import EditorPreviewController as Preview
-from haizflow.schemas.editor import EditorDocument, EditorSequence
-from haizflow.schemas.video import CropSettings, SubtitleStyle
+from beup.desktop.editor_preview_controller import EditorPreviewController as Preview
+from beup.schemas.editor import EditorDocument, EditorSequence
+from beup.schemas.video import CropSettings, SubtitleStyle
 
 EDGES = ("left_percent", "right_percent", "top_percent", "bottom_percent")
 SPELLINGS = list(itertools.product((False, True), repeat=4))
@@ -51,9 +51,9 @@ def session(tmp_path, monkeypatch):
                            _resolve_video_file=lambda *_: str(source),
                            manualPreviewAudio=object(), editorPreviewChanged=SimpleNamespace(emit=Mock()))
     controller = Preview(host)
-    module = "haizflow.desktop.editor_preview_controller"
+    module = "beup.desktop.editor_preview_controller"
     monkeypatch.setattr(f"{module}.video_store.get_video_dir", lambda _: str(tmp_path))
-    monkeypatch.setattr("haizflow.services.editor_documents.load", lambda _: document)
+    monkeypatch.setattr("beup.services.editor_documents.load", lambda _: document)
     monkeypatch.setattr(f"{module}.manual_artifacts.pin", Mock())
     monkeypatch.setattr(f"{module}.manual_artifacts.unpin", Mock())
     monkeypatch.setattr(f"{module}.cancel_video", Mock())
@@ -93,8 +93,8 @@ def test_reopen_restores_every_existing_crop_spelling_without_probe_or_render(se
         video.crop = CropSettings.model_validate_json(video.crop.model_dump_json())
         controller._completed_requests.clear()
         controller._completed_base_sources.clear()
-        with (patch("haizflow.desktop.editor_preview_controller.threading.Thread") as worker,
-              patch("haizflow.desktop.editor_preview_controller.get_video_duration") as probe):
+        with (patch("beup.desktop.editor_preview_controller.threading.Thread") as worker,
+              patch("beup.desktop.editor_preview_controller.get_video_duration") as probe):
             assert controller.request("[]", 17, cache_only=True)
             worker.assert_not_called()
             probe.assert_not_called()

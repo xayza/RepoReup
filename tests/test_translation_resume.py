@@ -6,9 +6,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from haizflow.services import gemini_translation, hymt2_worker, translation
-from haizflow.services.translation_progress import TranslationProgress
-from haizflow.pipeline import process_video
+from beup.services import gemini_translation, hymt2_worker, translation
+from beup.services.translation_progress import TranslationProgress
+from beup.pipeline import process_video
 
 
 def test_frozen_worker_request_preserves_unicode_with_windows_system_code_page():
@@ -244,8 +244,8 @@ def test_hymt2_progress_is_saved_before_pause_callback(tmp_path):
 
 
 def test_manual_translation_pause_at_publication_reuses_completed_batches(tmp_path):
-    from haizflow.pipeline import manual_tools
-    from haizflow.services import translation_progress
+    from beup.pipeline import manual_tools
+    from beup.services import translation_progress
 
     source = tmp_path / "source.json"
     source.write_text(json.dumps([{"start": 0, "end": 1, "text": "Hello friend", "language": "en"}]))
@@ -262,8 +262,8 @@ def test_manual_translation_pause_at_publication_reuses_completed_batches(tmp_pa
           patch.object(manual_tools.manual_artifacts, "create_staging_directory", side_effect=stages),
           patch.object(manual_tools.manual_artifacts, "publish", side_effect=[RuntimeError("paused"), recognition]),
           patch.object(manual_tools, "_release_recognition_runtime"),
-          patch("haizflow.pipeline.omnivoice_tts.clear_runtime"),
-          patch("haizflow.core.hardware.processing_device_preference", return_value="gpu"),
+          patch("beup.pipeline.omnivoice_tts.clear_runtime"),
+          patch("beup.core.hardware.processing_device_preference", return_value="gpu"),
           patch.object(manual_tools, "_replace_subtitles_from_translation"),
           patch.object(translation_progress, "manual_progress_path", return_value=checkpoint),
           patch.object(translation, "log_to_video"),

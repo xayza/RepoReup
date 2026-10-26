@@ -8,14 +8,14 @@ from unittest.mock import Mock
 import pytest
 from PySide6.QtGui import QGuiApplication
 
-from haizflow.desktop import processing_lifecycle_controller as lifecycle
-from haizflow.desktop.channel_import import ChannelImportCoordinator
-from haizflow.desktop.media_download_controller import MediaDownloadController
-from haizflow.pipeline import manual_tools, process_registry, process_video
-from haizflow.schemas.channel_import import ChannelImportRequest, ChannelVideoCandidate
-from haizflow.schemas.video import VideoConfig, VideoInfo
-from haizflow.services import processing_runs
-from haizflow.services.channel_import import download_workspace, new_session
+from beup.desktop import processing_lifecycle_controller as lifecycle
+from beup.desktop.channel_import import ChannelImportCoordinator
+from beup.desktop.media_download_controller import MediaDownloadController
+from beup.pipeline import manual_tools, process_registry, process_video
+from beup.schemas.channel_import import ChannelImportRequest, ChannelVideoCandidate
+from beup.schemas.video import VideoConfig, VideoInfo
+from beup.services import processing_runs
+from beup.services.channel_import import download_workspace, new_session
 
 
 _GUI = None
@@ -152,7 +152,7 @@ def test_pause_at_manual_completion_keeps_complete_result_and_resume_target(stop
 
 @pytest.mark.parametrize("boundary", ["before_publication", "after_publication"])
 def test_auto_completion_cannot_replace_pause_with_done(stopped_video, monkeypatch, tmp_path, boundary):
-    from haizflow.services import manual_artifacts, video_export
+    from beup.services import manual_artifacts, video_export
 
     video = stopped_video
     video.project_type = "single"
@@ -329,7 +329,7 @@ def test_cross_volume_download_copy_cancel_never_leaves_partial_output(tmp_path,
     def open_file(path, *args, **kwargs):
         return Reader(b"new download") if path == source else original_open(path, *args, **kwargs)
     monkeypatch.setattr(Path, "open", open_file)
-    from haizflow.services.video_download import DownloadCancelled
+    from beup.services.video_download import DownloadCancelled
     try:
         with pytest.raises(DownloadCancelled):
             controller._move_to_unique_path(source, existing)

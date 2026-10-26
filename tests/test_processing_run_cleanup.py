@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import manual_artifacts, processing_runs, project_store, video_store
+from beup.schemas.video import VideoConfig
+from beup.services import manual_artifacts, processing_runs, project_store, video_store
 
 
 @pytest.fixture
@@ -242,8 +242,8 @@ def test_transient_temp_cleanup_failure_has_evidence_and_can_retry(video_factory
 @pytest.mark.parametrize('reopen', [False, True])
 def test_manual_gemini_503_then_fresh_run_can_translate_and_publish_subtitles(video_factory, monkeypatch, reopen):
     import json
-    from haizflow.pipeline import manual_tools
-    from haizflow.services import gemini_translation
+    from beup.pipeline import manual_tools
+    from beup.services import gemini_translation
 
     video = video_factory()
     video_store.update_video(video.video_id, manual_target_tool='translation', enable_audio_separation=False,
@@ -254,7 +254,7 @@ def test_manual_gemini_503_then_fresh_run_can_translate_and_publish_subtitles(vi
     monkeypatch.setattr(manual_tools, 'transcribe', transcribe)
     monkeypatch.setattr(manual_tools, '_release_recognition_runtime', lambda: None)
     monkeypatch.setattr(manual_tools, 'shutdown_hymt2_worker', lambda: None)
-    monkeypatch.setattr('haizflow.pipeline.omnivoice_tts.clear_runtime', lambda: None)
+    monkeypatch.setattr('beup.pipeline.omnivoice_tts.clear_runtime', lambda: None)
     monkeypatch.setattr(gemini_translation, 'active_key', lambda: 'isolated-test-key-not-real')
     calls = []
     def translate(chunk, **_kwargs):
@@ -565,10 +565,10 @@ def test_export_cancel_cleans_published_worker_results_before_queue_detaches(vid
     from unittest.mock import Mock
     from PySide6.QtCore import QObject
     from PySide6.QtGui import QGuiApplication
-    from haizflow.desktop.processing_lifecycle_controller import ProcessingLifecycleController
-    from haizflow.desktop.video_export_controller import VideoExportController
-    from haizflow.pipeline.process_registry import check_cancellation, clean_video, start_video
-    from haizflow.services.processing_queue import SerialProcessingQueue
+    from beup.desktop.processing_lifecycle_controller import ProcessingLifecycleController
+    from beup.desktop.video_export_controller import VideoExportController
+    from beup.pipeline.process_registry import check_cancellation, clean_video, start_video
+    from beup.services.processing_queue import SerialProcessingQueue
 
     app = QGuiApplication.instance() or QGuiApplication([])
     video = video_factory()
@@ -599,7 +599,7 @@ def test_export_cancel_cleans_published_worker_results_before_queue_detaches(vid
             video_store.update_video(identifier, status="cancelled", step="cancelled")
         finally:
             clean_video(identifier)
-    monkeypatch.setattr("haizflow.pipeline.manual_tools.run_manual_tool_sync", pipeline)
+    monkeypatch.setattr("beup.pipeline.manual_tools.run_manual_tool_sync", pipeline)
     identifier = processing_runs.arm_export(video.video_id)
     job = {"videoId": video.video_id, "status": "rendering", "progress": 10, "runScopeId": identifier}
     exporter.jobs = [job]

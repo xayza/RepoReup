@@ -7,9 +7,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.pipeline import subtitle
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import video_export
+from beup.pipeline import subtitle
+from beup.schemas.video import VideoConfig
+from beup.services import video_export
 
 
 @pytest.mark.parametrize("preserve", [False, True])

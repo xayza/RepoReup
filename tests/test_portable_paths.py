@@ -13,19 +13,19 @@ SRC = ROOT / "src"
 
 class PortablePathTests(unittest.TestCase):
     def test_versioned_core_uses_same_install_runtime_not_version_directory(self):
-        from haizflow.update.state import provision
+        from beup.update.state import provision
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "installation"
             provision(root)
             for value in ("0.1.0", "0.2.0"):
                 core = root / "versions" / value
                 core.mkdir(parents=True)
-                environment = dict(os.environ, PYTHONPATH=str(SRC), HAIZFLOW_TEST_CORE=str(core),
-                                   HAIZFLOW_INSTALL_ROOT="C:/HaizFlow-escape-test", HAIZFLOW_HOME="C:/HaizFlow-escape-test")
-                environment.pop("HAIZFLOW_SMOKE_TEST", None)
+                environment = dict(os.environ, PYTHONPATH=str(SRC), BEUP_TEST_CORE=str(core),
+                                   BEUP_INSTALL_ROOT="C:/BeUp-escape-test", BEUP_HOME="C:/BeUp-escape-test")
+                environment.pop("BEUP_SMOKE_TEST", None)
                 script = ("import sys, os, json; sys.frozen=True; "
-                          "sys.executable=os.environ['HAIZFLOW_TEST_CORE']+'/HaizFlowCore.exe'; "
-                          "from haizflow.core.paths import install_root, core_root, app_data_dir; "
+                          "sys.executable=os.environ['BEUP_TEST_CORE']+'/BeUpCore.exe'; "
+                          "from beup.core.paths import install_root, core_root, app_data_dir; "
                           "print(json.dumps([str(install_root()),str(core_root()),str(app_data_dir())]))")
                 result = subprocess.run([sys.executable, "-c", script], env=environment, capture_output=True,
                                         text=True, check=False, timeout=15)
@@ -39,11 +39,11 @@ class PortablePathTests(unittest.TestCase):
             core = root / "versions/0.2.0"
             core.mkdir(parents=True)
             (root / "update-layout.json").write_text("{}")
-            environment = dict(os.environ, PYTHONPATH=str(SRC), HAIZFLOW_TEST_CORE=str(core))
-            environment.pop("HAIZFLOW_SMOKE_TEST", None)
+            environment = dict(os.environ, PYTHONPATH=str(SRC), BEUP_TEST_CORE=str(core))
+            environment.pop("BEUP_SMOKE_TEST", None)
             script = ("import sys, os; sys.frozen=True; "
-                      "sys.executable=os.environ['HAIZFLOW_TEST_CORE']+'/HaizFlowCore.exe'; "
-                      "from haizflow.core.paths import app_data_dir; app_data_dir()")
+                      "sys.executable=os.environ['BEUP_TEST_CORE']+'/BeUpCore.exe'; "
+                      "from beup.core.paths import app_data_dir; app_data_dir()")
             result = subprocess.run([sys.executable, "-c", script], env=environment, capture_output=True,
                                     text=True, check=False, timeout=15)
             self.assertNotEqual(result.returncode, 0)
@@ -55,12 +55,12 @@ class PortablePathTests(unittest.TestCase):
             environment.update(
                 {
                     "PYTHONPATH": str(SRC),
-                    "HAIZFLOW_SMOKE_TEST": "1",
-                    "HAIZFLOW_HOME": temporary,
+                    "BEUP_SMOKE_TEST": "1",
+                    "BEUP_HOME": temporary,
                 }
             )
             script = (
-                "import json, os; import haizflow.config; "
+                "import json, os; import beup.config; "
                 "profile = os.environ['USERPROFILE']; "
                 "print(json.dumps({name: os.path.isdir(os.path.join(profile, name)) for name in "
                 "('Desktop', 'Documents', 'Downloads', 'Music', 'Pictures', 'Videos')}))"
@@ -79,17 +79,17 @@ class PortablePathTests(unittest.TestCase):
             environment.update(
                 {
                     "PYTHONPATH": str(SRC),
-                    "HAIZFLOW_SMOKE_TEST": "1",
-                    "HAIZFLOW_HOME": temporary,
+                    "BEUP_SMOKE_TEST": "1",
+                    "BEUP_HOME": temporary,
                     "RUNTIME_DATA_DIR": temporary,
-                    "MODELS_DIR": "C:\\HaizFlow-escape-test\\models",
-                    "HF_HOME": "C:\\HaizFlow-escape-test\\huggingface",
-                    "TORCH_HOME": "C:\\HaizFlow-escape-test\\torch",
-                    "HAIZFLOW_TMP_DIR": "C:\\HaizFlow-escape-test\\tmp",
+                    "MODELS_DIR": "C:\\BeUp-escape-test\\models",
+                    "HF_HOME": "C:\\BeUp-escape-test\\huggingface",
+                    "TORCH_HOME": "C:\\BeUp-escape-test\\torch",
+                    "BEUP_TMP_DIR": "C:\\BeUp-escape-test\\tmp",
                 }
             )
             script = (
-                "import json, os; import haizflow.config as c; "
+                "import json, os; import beup.config as c; "
                 "values = {name: os.environ[name] for name in "
                 "('HF_HOME','TORCH_HOME','TORCHINDUCTOR_CACHE_DIR','PYTORCH_KERNEL_CACHE_PATH',"
                 "'XDG_CACHE_HOME','XDG_DATA_HOME','XDG_CONFIG_HOME','NUMBA_CACHE_DIR','MPLCONFIGDIR',"
@@ -119,34 +119,34 @@ class PortablePathTests(unittest.TestCase):
             install_root = Path(temporary) / "selected-install"
             bundle_root = install_root / "_internal"
             bundle_root.mkdir(parents=True)
-            (install_root / "HaizFlow.exe").touch()
+            (install_root / "BeUp.exe").touch()
             environment = os.environ.copy()
             for name in (
-                "HAIZFLOW_HOME", "HAIZFLOW_INSTALL_ROOT", "HAIZFLOW_SMOKE_TEST",
+                "BEUP_HOME", "BEUP_INSTALL_ROOT", "BEUP_SMOKE_TEST",
                 "APP_DATA_DIR", "RUNTIME_DATA_DIR", "MODELS_DIR", "BIN_DIR",
-                "HF_HOME", "TORCH_HOME", "HAIZFLOW_TMP_DIR",
+                "HF_HOME", "TORCH_HOME", "BEUP_TMP_DIR",
                 "HOME", "USERPROFILE",
             ):
                 environment.pop(name, None)
             environment.update(
                 {
                     "PYTHONPATH": str(SRC),
-                    "APP_DATA_DIR": "C:\\HaizFlow-escape-test\\app-data",
-                    "RUNTIME_DATA_DIR": "C:\\HaizFlow-escape-test\\runtime-data",
-                    "MODELS_DIR": "C:\\HaizFlow-escape-test\\models",
-                    "BIN_DIR": "C:\\HaizFlow-escape-test\\bin",
-                    "HF_HOME": "C:\\HaizFlow-escape-test\\huggingface",
-                    "TORCH_HOME": "C:\\HaizFlow-escape-test\\torch",
-                    "HAIZFLOW_TMP_DIR": "C:\\HaizFlow-escape-test\\tmp",
-                    "HAIZFLOW_TEST_INSTALL_ROOT": str(install_root),
-                    "HAIZFLOW_TEST_BUNDLE_ROOT": str(bundle_root),
+                    "APP_DATA_DIR": "C:\\BeUp-escape-test\\app-data",
+                    "RUNTIME_DATA_DIR": "C:\\BeUp-escape-test\\runtime-data",
+                    "MODELS_DIR": "C:\\BeUp-escape-test\\models",
+                    "BIN_DIR": "C:\\BeUp-escape-test\\bin",
+                    "HF_HOME": "C:\\BeUp-escape-test\\huggingface",
+                    "TORCH_HOME": "C:\\BeUp-escape-test\\torch",
+                    "BEUP_TMP_DIR": "C:\\BeUp-escape-test\\tmp",
+                    "BEUP_TEST_INSTALL_ROOT": str(install_root),
+                    "BEUP_TEST_BUNDLE_ROOT": str(bundle_root),
                 }
             )
             script = (
                 "import json, os, sys; "
-                "sys.frozen = True; sys.executable = os.environ['HAIZFLOW_TEST_INSTALL_ROOT'] + '/HaizFlow.exe'; "
-                "sys._MEIPASS = os.environ['HAIZFLOW_TEST_BUNDLE_ROOT']; "
-                "import haizflow.config as c; "
+                "sys.frozen = True; sys.executable = os.environ['BEUP_TEST_INSTALL_ROOT'] + '/BeUp.exe'; "
+                "sys._MEIPASS = os.environ['BEUP_TEST_BUNDLE_ROOT']; "
+                "import beup.config as c; "
                 "names = ('APP_DATA_DIR','RUNTIME_DATA_DIR','MODELS_DIR','BIN_DIR','HF_HOME','TORCH_HOME',"
                 "'TORCHINDUCTOR_CACHE_DIR','PYTORCH_KERNEL_CACHE_PATH','XDG_CACHE_HOME','XDG_DATA_HOME',"
                 "'XDG_CONFIG_HOME','NUMBA_CACHE_DIR','MPLCONFIGDIR','EASYOCR_MODULE_PATH','PADDLE_HOME',"

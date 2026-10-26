@@ -12,7 +12,7 @@ from PySide6.QtQml import QQmlComponent, QQmlEngine, QQmlExpression
 from PySide6.QtQuick import QQuickItem
 from PySide6.QtTest import QTest
 
-QML_DIR = Path(__file__).resolve().parents[1] / "src/haizflow/desktop/qml"
+QML_DIR = Path(__file__).resolve().parents[1] / "src/beup/desktop/qml"
 
 
 class CaptionController(QObject):
@@ -77,7 +77,7 @@ class SubtitleCueEditorUiTests(unittest.TestCase):
     def setUpClass(cls):
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         cls.app = QGuiApplication.instance() or QGuiApplication([])
-        if os.environ.get("HAIZFLOW_UI_PREVIEWS"):
+        if os.environ.get("BEUP_UI_PREVIEWS"):
             for name in ("SegUIVar.ttf", "SegoeIcons.ttf"):
                 QFontDatabase.addApplicationFont(str(Path("C:/Windows/Fonts") / name))
 
@@ -167,7 +167,7 @@ ManualSubtitleToolPanel { id: panel; objectName: "panel"; x: 12; y: 12; width: w
         editor = self.child("manualSubtitleTextInput")
         save = self.child("manualInlineSubtitleSaveButton")
         editor.setProperty("text", "Cảm ơn mẹ rất nhiều.")
-        preview = os.environ.get("HAIZFLOW_UI_PREVIEWS")
+        preview = os.environ.get("BEUP_UI_PREVIEWS")
         if preview:
             self.window.grabWindow().save(str(Path(preview) / "subtitle-manual-initial.png"))
         self.click(self.child("subtitleCue_1"))
@@ -216,7 +216,7 @@ ManualSubtitleToolPanel { id: panel; objectName: "panel"; x: 12; y: 12; width: w
         self.evaluate('panel.currentTab = "content"')
         QTest.qWait(30)
         self.assertEqual(editor.property("text"), "Bản nháp tiếng Việt")
-        preview = os.environ.get("HAIZFLOW_UI_PREVIEWS")
+        preview = os.environ.get("BEUP_UI_PREVIEWS")
         if preview:
             window.setWidth(420)
             window.setHeight(640)
@@ -398,7 +398,7 @@ SubtitleTextEditor {
 
     def test_caption_browser_uses_english_translations(self):
         translator = QTranslator()
-        self.assertTrue(translator.load(str(QML_DIR.parent / "translations/haizflow_en.qm")))
+        self.assertTrue(translator.load(str(QML_DIR.parent / "translations/beup_en.qm")))
         self.app.installTranslator(translator)
         try:
             self.create_window('SubtitleCueList { anchors.fill: parent }')
@@ -458,7 +458,7 @@ ManualSubtitleEditorDialog {
             self.assertGreaterEqual(editor_top, find.mapToScene(QPointF(0, find.height())).y())
             self.assertLessEqual(editor_bottom, footer.mapToScene(QPointF()).y())
             self.assertLessEqual(save.mapToScene(QPointF(0, save.height())).y(), height)
-        preview = os.environ.get("HAIZFLOW_UI_PREVIEWS")
+        preview = os.environ.get("BEUP_UI_PREVIEWS")
         if preview:
             window.setWidth(1120)
             window.setHeight(720)
@@ -509,7 +509,7 @@ SubtitleEditorWorkspace {
             bottom = editor.mapToScene(QPointF(editor.width(), editor.height()))
             self.assertLessEqual(bottom.x(), width)
             self.assertLess(bottom.y(), height - 200)
-        preview = os.environ.get("HAIZFLOW_UI_PREVIEWS")
+        preview = os.environ.get("BEUP_UI_PREVIEWS")
         if preview:
             window.setWidth(1440)
             window.setHeight(900)

@@ -7,10 +7,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from haizflow.desktop.channel_import import ChannelImportCoordinator
-from haizflow.desktop.localization import QMessageBox
-from haizflow.desktop.project_commands_controller import ProjectCommandsController
-from haizflow.services import project_store
+from beup.desktop.channel_import import ChannelImportCoordinator
+from beup.desktop.localization import QMessageBox
+from beup.desktop.project_commands_controller import ProjectCommandsController
+from beup.services import project_store
 
 
 def host():
@@ -30,7 +30,7 @@ def test_cancel_confirmation_does_not_enumerate_or_touch_project_files(answer):
     commands = ProjectCommandsController(owner)
     project = {"key": "delete-me", "project_name": "Long project", "project_type": "manual", "videos": []}
     with (patch.object(QMessageBox, "question", return_value=answer),
-          patch("haizflow.services.video_store.list_videos", side_effect=AssertionError("No disk catalog walk")),
+          patch("beup.services.video_store.list_videos", side_effect=AssertionError("No disk catalog walk")),
           patch.object(project_store, "delete_project_by_key") as remove):
         assert not commands.delete_project_summary(project)
     remove.assert_not_called()
@@ -53,7 +53,7 @@ def test_yes_returns_immediately_and_disk_work_runs_only_in_background():
 
     with (patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes) as question,
           patch.object(commands, "_delete_project_files", side_effect=slow_remove),
-          patch("haizflow.services.video_store.list_videos", side_effect=AssertionError("Use row snapshot"))):
+          patch("beup.services.video_store.list_videos", side_effect=AssertionError("Use row snapshot"))):
         start = time.perf_counter()
         try:
             assert commands.delete_project_summary(project)
@@ -81,8 +81,8 @@ def test_long_project_deletes_owned_root_once_not_each_video(tmp_path):
     directory = tmp_path / "batch"
     directory.mkdir()
     with (patch.object(project_store, "get_project", return_value={"project_root": str(directory)}),
-          patch("haizflow.services.video_store.get_video_dir", side_effect=lambda key: str(directory / key)),
-          patch("haizflow.services.video_store.delete_video") as child_delete,
+          patch("beup.services.video_store.get_video_dir", side_effect=lambda key: str(directory / key)),
+          patch("beup.services.video_store.delete_video") as child_delete,
           patch.object(project_store, "validate_project_deletion_by_key") as deep_preflight,
           patch.object(project_store, "delete_project_by_key") as root_delete):
         commands._delete_project_files(project, videos, background=True)
@@ -106,7 +106,7 @@ def test_windows_preview_handle_retry_runs_outside_ui_slot(tmp_path):
 
     with (patch.object(project_store, "get_project", return_value={"project_root": str(tmp_path)}),
           patch.object(project_store, "delete_project_by_key", side_effect=remove),
-          patch("haizflow.desktop.project_commands_controller.time.sleep") as sleep):
+          patch("beup.desktop.project_commands_controller.time.sleep") as sleep):
         commands._delete_project_files(project, [], background=True)
     assert len(attempts) == 3
     assert [call.args[0] for call in sleep.call_args_list] == [.1, .2]
@@ -164,7 +164,7 @@ def test_worker_start_failure_does_not_leave_project_permanently_busy():
     owner = host()
     commands = ProjectCommandsController(owner)
     project = {"key": "pending", "project_name": "Pending"}
-    with (patch("haizflow.desktop.project_commands_controller.threading.Thread") as worker,
+    with (patch("beup.desktop.project_commands_controller.threading.Thread") as worker,
           pytest.raises(RuntimeError, match="no threads")):
         worker.return_value.start.side_effect = RuntimeError("no threads")
         commands._queue_project_delete(project, [SimpleNamespace(video_id="a")])

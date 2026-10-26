@@ -6,7 +6,7 @@ import threading
 
 import pytest
 
-from haizflow.services import model_bootstrap as bootstrap
+from beup.services import model_bootstrap as bootstrap
 
 
 class Response(io.BytesIO):

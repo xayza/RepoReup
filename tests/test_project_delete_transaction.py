@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from haizflow.core.storage_ownership import managed_storage_guard, safe_tree
-from haizflow.services import project_store
+from beup.core.storage_ownership import managed_storage_guard, safe_tree
+from beup.services import project_store
 
 
 @pytest.fixture
@@ -123,7 +123,7 @@ def test_safe_tree_checks_ancestors_per_directory_not_once_for_every_file(tmp_pa
     folder.mkdir(parents=True)
     for index in range(100):
         (folder / f"voice-{index}.wav").write_bytes(b"voice")
-    from haizflow.core import storage_ownership
+    from beup.core import storage_ownership
     with patch.object(storage_ownership, "owned_path", wraps=storage_ownership.owned_path) as ownership:
         safe_tree(tmp_path)
     assert ownership.call_count == 5  # Root/cache/a/b/c, independent of file count.
@@ -149,6 +149,6 @@ def test_safe_tree_blocks_windows_reparse_attribute_without_following_it(tmp_pat
         stat=lambda **_kwargs: SimpleNamespace(st_mode=stat.S_IFDIR, st_file_attributes=1024))
     iterator = MagicMock()
     iterator.__enter__.return_value = [entry]
-    with (patch("haizflow.core.storage_ownership.os.scandir", return_value=iterator),
+    with (patch("beup.core.storage_ownership.os.scandir", return_value=iterator),
           pytest.raises(ValueError, match="reparse")):
         safe_tree(tmp_path)

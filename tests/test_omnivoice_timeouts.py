@@ -8,8 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.pipeline import omnivoice_tts as voice
-from haizflow.pipeline import process_registry as registry
+from beup.pipeline import omnivoice_tts as voice
+from beup.pipeline import process_registry as registry
 
 
 def resident_fixture(tmp_path, monkeypatch, *, device="cuda:0"):

@@ -9,8 +9,8 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from haizflow.pipeline import vieneu_tts as voice
-from haizflow.pipeline.tts_quality import SpeechQualityError, validate_short_phrase_audio
+from beup.pipeline import vieneu_tts as voice
+from beup.pipeline.tts_quality import SpeechQualityError, validate_short_phrase_audio
 
 
 def speech(seconds=.13):

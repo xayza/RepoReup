@@ -12,7 +12,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from haizflow.desktop.processing_lifecycle_controller import ProcessingLifecycleController
+from beup.desktop.processing_lifecycle_controller import ProcessingLifecycleController
 
 
 class StartupWarmupQueueTests(unittest.TestCase):
@@ -33,12 +33,12 @@ class StartupWarmupQueueTests(unittest.TestCase):
         controller = ProcessingLifecycleController(self._host(warmup_done))
 
         with (
-            patch("haizflow.desktop.processing_lifecycle_controller.video_store.get_video", return_value=video),
-            patch("haizflow.desktop.processing_lifecycle_controller.video_store.update_video") as update,
-            patch("haizflow.desktop.processing_lifecycle_controller.video_store.log_to_video"),
-            patch("haizflow.desktop.processing_lifecycle_controller.is_cancelled", side_effect=lambda _: paused.is_set()),
-            patch("haizflow.desktop.processing_lifecycle_controller.is_paused", side_effect=lambda _: paused.is_set()),
-            patch("haizflow.pipeline.process_video.process_video_sync") as process_video,
+            patch("beup.desktop.processing_lifecycle_controller.video_store.get_video", return_value=video),
+            patch("beup.desktop.processing_lifecycle_controller.video_store.update_video") as update,
+            patch("beup.desktop.processing_lifecycle_controller.video_store.log_to_video"),
+            patch("beup.desktop.processing_lifecycle_controller.is_cancelled", side_effect=lambda _: paused.is_set()),
+            patch("beup.desktop.processing_lifecycle_controller.is_paused", side_effect=lambda _: paused.is_set()),
+            patch("beup.pipeline.process_video.process_video_sync") as process_video,
         ):
             worker = threading.Thread(target=controller.execute_pipeline, args=("video-1",))
             worker.start()
@@ -57,15 +57,15 @@ class StartupWarmupQueueTests(unittest.TestCase):
         controller = ProcessingLifecycleController(self._host(warmup_done))
 
         with (
-            patch("haizflow.desktop.processing_lifecycle_controller.video_store.get_video", return_value=video),
-            patch("haizflow.desktop.processing_lifecycle_controller.video_store.update_video"),
-            patch("haizflow.desktop.processing_lifecycle_controller.video_store.log_to_video"),
-            patch("haizflow.desktop.processing_lifecycle_controller.is_cancelled", return_value=False),
-            patch("haizflow.desktop.processing_lifecycle_controller.is_paused", return_value=False),
-            patch("haizflow.desktop.processing_lifecycle_controller.runtime_profile", return_value=SimpleNamespace(
+            patch("beup.desktop.processing_lifecycle_controller.video_store.get_video", return_value=video),
+            patch("beup.desktop.processing_lifecycle_controller.video_store.update_video"),
+            patch("beup.desktop.processing_lifecycle_controller.video_store.log_to_video"),
+            patch("beup.desktop.processing_lifecycle_controller.is_cancelled", return_value=False),
+            patch("beup.desktop.processing_lifecycle_controller.is_paused", return_value=False),
+            patch("beup.desktop.processing_lifecycle_controller.runtime_profile", return_value=SimpleNamespace(
                 total_ram_gib=16, cuda_available=False, total_vram_gib=0,
             )),
-            patch("haizflow.pipeline.process_video.process_video_sync") as process_video,
+            patch("beup.pipeline.process_video.process_video_sync") as process_video,
         ):
             worker = threading.Thread(target=controller.execute_pipeline, args=("video-2",))
             worker.start()

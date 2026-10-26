@@ -4,9 +4,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow import config
-from haizflow.pipeline import omnivoice_tts, vieneu_tts
-from haizflow.pipeline import process_registry as registry
+from beup import config
+from beup.pipeline import omnivoice_tts, vieneu_tts
+from beup.pipeline import process_registry as registry
 
 CHILD = r'''
 import json, os, sys, time
@@ -42,7 +42,7 @@ def run_synthesis(tmp_path, monkeypatch):
     monkeypatch.setattr(vieneu_tts, "verify_assets", lambda *_: tmp_path)
     monkeypatch.setattr(vieneu_tts, "prepare_runtime", lambda *_: tmp_path)
     monkeypatch.setattr(omnivoice_tts, "_synthesis_stall_timeout", lambda _request: .6)
-    monkeypatch.setattr("haizflow.services.video_store.log_to_video", Mock())
+    monkeypatch.setattr("beup.services.video_store.log_to_video", Mock())
 
     def encode(wav, output, _id):
         assert wav.is_file()

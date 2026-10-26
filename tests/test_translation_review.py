@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from haizflow.services import translation
+from beup.services import translation
 
 
 @pytest.mark.parametrize("mode", ["manual", "auto"])
@@ -52,8 +52,8 @@ def test_corrupt_retry_cannot_replace_valid_initial_translation(tmp_path):
 
 @pytest.mark.parametrize("code", ["review_translation", "invalid_text"])
 def test_subtitle_review_warning_disappears_after_user_edits_text(code):
-    from haizflow.desktop.manual_editor_document_model import ManualEditorDocumentModel
-    from haizflow.schemas.editor import EditorClip, EditorDocument, EditorSequence, EditorTrack
+    from beup.desktop.manual_editor_document_model import ManualEditorDocumentModel
+    from beup.schemas.editor import EditorClip, EditorDocument, EditorSequence, EditorTrack
 
     clip = EditorClip(clip_id="subtitle-1", track_id="subtitles", kind="subtitle",
                       name="Chào bạn", start_ms=0, duration_ms=2000,

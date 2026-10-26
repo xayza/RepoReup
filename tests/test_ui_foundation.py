@@ -9,11 +9,11 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from haizflow.desktop.models import ProjectBrowserProxyModel, ProjectListModel
+from beup.desktop.models import ProjectBrowserProxyModel, ProjectListModel
 
 
 ROOT = Path(__file__).resolve().parents[1]
-QML_DIR = ROOT / "src" / "haizflow" / "desktop" / "qml"
+QML_DIR = ROOT / "src" / "beup" / "desktop" / "qml"
 
 
 class UiFoundationTests(unittest.TestCase):
@@ -30,9 +30,9 @@ class UiFoundationTests(unittest.TestCase):
         return (high + 0.05) / (low + 0.05)
 
     def test_english_catalog_is_complete_and_loads_at_runtime(self):
-        translation_dir = ROOT / "src" / "haizflow" / "desktop" / "translations"
-        catalog_source = translation_dir / "haizflow_en.ts"
-        catalog_binary = translation_dir / "haizflow_en.qm"
+        translation_dir = ROOT / "src" / "beup" / "desktop" / "translations"
+        catalog_source = translation_dir / "beup_en.ts"
+        catalog_binary = translation_dir / "beup_en.qm"
         tree = ET.parse(catalog_source)
         unfinished = tree.findall(".//translation[@type='unfinished']")
         self.assertEqual(unfinished, [])
@@ -692,7 +692,7 @@ for name, value in {{
     "selectedProgress": 20,
     "removeOriginalSubtitles": True,
     "originalSubtitleRemovalMode": "blur",
-    "watermarkText": "HaizFlow",
+    "watermarkText": "BeUp",
     "backgroundMusicPath": "",
 }}.items():
     controller.insert(name, value)
@@ -886,7 +886,7 @@ ApplicationWindow {{
         objectName: "watermarkOverlay"
         anchors.fill: parent
         videoRect: Qt.rect(100, 50, 600, 500)
-        watermarkText: "HaizFlow"
+        watermarkText: "BeUp"
         scalePercent: 100
         referenceWidthPixels: 1080
         referenceHeightPixels: 1920
@@ -1088,7 +1088,7 @@ app.processEvents()
         self.assertIn("root.compactLayout ? Theme.space8 : Theme.space12", about)
         self.assertIn('destination: "https://haizflow.pages.dev/"', about)
         self.assertIn('label: qsTr("GitHub cá nhân")', about)
-        self.assertIn('qsTr("Ủng hộ HaizFlow")', about)
+        self.assertIn('qsTr("Ủng hộ BeUp")', about)
         self.assertIn('label: qsTr("Email")', about)
         self.assertNotIn("SettingRow {", about)
         self.assertIn("SearchField {", log_dialog)

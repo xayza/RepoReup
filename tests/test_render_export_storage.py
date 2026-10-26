@@ -17,10 +17,10 @@ from unittest.mock import Mock, patch
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
-from haizflow.core.storage_ownership import owned_path, safe_tree
-from haizflow.desktop.video_export_controller import VideoExportController
-from haizflow.schemas.video import VIDEO_METADATA_SCHEMA_VERSION, VideoConfig
-from haizflow.services import desktop_settings, manual_artifacts, project_store, video_export, video_store
+from beup.core.storage_ownership import owned_path, safe_tree
+from beup.desktop.video_export_controller import VideoExportController
+from beup.schemas.video import VIDEO_METADATA_SCHEMA_VERSION, VideoConfig
+from beup.services import desktop_settings, manual_artifacts, project_store, video_export, video_store
 
 
 class _Host(QObject):
@@ -51,7 +51,7 @@ class RenderExportStorageTests(unittest.TestCase):
         cls.qt_application = QApplication.instance() or QApplication([])
 
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="haizflow-export-test-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="beup-export-test-")
         self.root = Path(self.temporary.name)
         self.external = self.root / "Thành phẩm"
         self.external.mkdir()
@@ -94,8 +94,8 @@ class RenderExportStorageTests(unittest.TestCase):
         return project, video_store.update_video(video.video_id, files=files)
 
     def test_segment_start_and_retry_never_request_whole_manual_render(self):
-        from haizflow.schemas.editor import EditorDocument, EditorSequence
-        from haizflow.services import editor_documents, result_segments
+        from beup.schemas.editor import EditorDocument, EditorSequence
+        from beup.services import editor_documents, result_segments
 
         _, video = self.make_video(kind="manual")
         document = EditorDocument(video_id=video.video_id, sequence=EditorSequence(duration_ms=1800000))
@@ -104,7 +104,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.host._selected_video_id = video.video_id
         launch = Mock()
         with patch.object(editor_documents, "load", return_value=document), \
-                patch("haizflow.desktop.video_export_controller.current_render", return_value=None), \
+                patch("beup.desktop.video_export_controller.current_render", return_value=None), \
                 patch.object(self.exporter, "launch", launch):
             self.assertTrue(self.exporter.start(video.video_id, "source", self.external / "cut.mp4",
                                                  segment_id="result-1"))
@@ -116,9 +116,9 @@ class RenderExportStorageTests(unittest.TestCase):
             self.host.runManualTool.assert_not_called()
 
     def test_uncached_segment_publication_keeps_full_cache_and_blocks_project_deletion(self):
-        from haizflow.pipeline import segment_export
-        from haizflow.schemas.editor import EditorDocument, EditorSequence
-        from haizflow.services import editor_documents
+        from beup.pipeline import segment_export
+        from beup.schemas.editor import EditorDocument, EditorSequence
+        from beup.services import editor_documents
 
         _, video = self.make_video(kind="manual")
         old_files = dict(video.files)
@@ -176,7 +176,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertEqual(target.read_bytes(), b"old")
 
     def test_social_catalog_keeps_completed_projects_after_settings_change_and_new_render(self):
-        from haizflow.desktop.social_publish_controller import SocialPublishController
+        from beup.desktop.social_publish_controller import SocialPublishController
 
         _, older = self.make_video(kind="manual", name="Dự án trước")
         old_path = video_export.render_path(older)
@@ -199,7 +199,7 @@ class RenderExportStorageTests(unittest.TestCase):
             self.assertEqual([row["video_id"] for row in controller._project_sources], [newer.video_id])
 
     def test_social_import_pins_the_selected_snapshot_even_when_active_render_changes(self):
-        from haizflow.desktop.social_publish_controller import SocialPublishController
+        from beup.desktop.social_publish_controller import SocialPublishController
 
         _, video = self.make_video(kind="manual")
         selected_path = video_export.render_path(video)
@@ -224,9 +224,9 @@ class RenderExportStorageTests(unittest.TestCase):
         publishing_root = self.root / "social-project"
         publishing_root.mkdir()
         with (
-            patch("haizflow.desktop.social_publish_controller.get_video_duration", return_value=30),
-            patch("haizflow.desktop.social_publish_controller.get_video_dimensions", return_value=(720, 1280)),
-            patch("haizflow.desktop.social_publish_controller.create_video_thumbnail_path"),
+            patch("beup.desktop.social_publish_controller.get_video_duration", return_value=30),
+            patch("beup.desktop.social_publish_controller.get_video_dimensions", return_value=(720, 1280)),
+            patch("beup.desktop.social_publish_controller.create_video_thumbnail_path"),
         ):
             controller._import_worker("social-project", str(publishing_root),
                                       [(selected_path, "Bản đã xuất")], "Caption", "#tag", 0)
@@ -236,14 +236,14 @@ class RenderExportStorageTests(unittest.TestCase):
         finished = next(event for event in events if event["type"] == "import_finished")
         self.assertEqual(finished["done"], 1, finished["errors"])
         self.assertEqual(finished["errors"], [])
-        from haizflow.services import social_publish
+        from beup.services import social_publish
         imported = list(Path(social_publish.media_directory(str(publishing_root))).glob("*.mp4"))
         self.assertEqual(len(imported), 1)
         self.assertEqual(imported[0].read_bytes(), b"managed-render")
         self.assertFalse(manual_artifacts.has_runtime_pins(video.video_id))
 
     def test_social_completed_snapshot_rejects_corruption_and_external_history(self):
-        from haizflow.desktop.social_publish_controller import SocialPublishController
+        from beup.desktop.social_publish_controller import SocialPublishController
 
         _, video = self.make_video()
         path = Path(SocialPublishController._output_path(video))
@@ -264,7 +264,7 @@ class RenderExportStorageTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             video_export.export_video(video, target, overwrite=True, progress=changed)
         self.assertEqual(target.read_bytes(), b"another applications update")
-        self.assertEqual(list(self.external.glob(".haizflow-export-*")), [])
+        self.assertEqual(list(self.external.glob(".beup-export-*")), [])
 
     def test_source_tampering_with_preserved_mtime_fails_checksum(self):
         _, video = self.make_video(content=b"a" * (3 * 1024**2))
@@ -312,8 +312,8 @@ class RenderExportStorageTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "Real FFmpeg integration needs installed binaries")
     def test_real_mp4_quality_copy_keeps_stereo_48khz_and_does_not_upscale(self):
-        from haizflow.pipeline.sequence_compiler import finish_export_resolution
-        from haizflow.utils.ffmpeg import validate_video_integrity
+        from beup.pipeline.sequence_compiler import finish_export_resolution
+        from beup.utils.ffmpeg import validate_video_integrity
 
         _project, video = self.make_video()
         working = video_export.export_destination(video)
@@ -341,15 +341,15 @@ class RenderExportStorageTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt" and Path("D:/").is_dir() and Path("C:/").is_dir(), "Cross-volume Windows integration")
     def test_project_on_d_drive_exports_to_c_drive(self):
-        from haizflow.config import NATIVE_WINDOWS_USERPROFILE
+        from beup.config import NATIVE_WINDOWS_USERPROFILE
 
         # The portable runtime redirects both tempfile and environment paths.
         # Only this export fixture uses the preserved native Windows profile.
         native_temp = Path(NATIVE_WINDOWS_USERPROFILE) / "AppData" / "Local" / "Temp"
         if not native_temp.is_dir():
             self.skipTest("Native Windows temporary directory is unavailable")
-        with (tempfile.TemporaryDirectory(prefix="haizflow-cross-drive-", dir=Path.cwd() / "build") as directory,
-              tempfile.TemporaryDirectory(prefix="haizflow-cross-drive-export-", dir=native_temp) as export_directory):
+        with (tempfile.TemporaryDirectory(prefix="beup-cross-drive-", dir=Path.cwd() / "build") as directory,
+              tempfile.TemporaryDirectory(prefix="beup-cross-drive-export-", dir=native_temp) as export_directory):
             self.assertEqual(Path(directory).drive.casefold(), "d:")
             external = Path(export_directory)
             if external.drive.casefold() != "c:":
@@ -381,7 +381,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertEqual(target.read_bytes(), b"old")
         self.assertIsNotNone(video_export.current_render(video))
         self.assertEqual(list(self.external.glob("*.partial")), [])
-        self.assertEqual(list(self.external.glob(".haizflow-export-*")), [])
+        self.assertEqual(list(self.external.glob(".beup-export-*")), [])
 
     def test_racing_destination_creation_is_not_overwritten(self):
         _, video = self.make_video()
@@ -403,13 +403,13 @@ class RenderExportStorageTests(unittest.TestCase):
         with self.assertRaises(video_export.ExportCancelled):
             video_export.export_video(video, target, overwrite=True, cancel=cancel, progress=lambda _value: cancel.set())
         self.assertEqual(target.read_bytes(), b"old")
-        self.assertEqual(list(self.external.glob(".haizflow-export-*")), [])
+        self.assertEqual(list(self.external.glob(".beup-export-*")), [])
         self.assertIsNotNone(video_export.current_render(video))
 
     def test_cancel_export_stops_real_render_process_and_cleans_staging(self):
-        from haizflow.pipeline.process_registry import clean_video, register_process, start_video
-        from haizflow.services.processing_queue import SerialProcessingQueue
-        from haizflow.utils.ffmpeg import _binary
+        from beup.pipeline.process_registry import clean_video, register_process, start_video
+        from beup.services.processing_queue import SerialProcessingQueue
+        from beup.utils.ffmpeg import _binary
 
         _, video = self.make_video(kind="manual")
         started = threading.Event()
@@ -523,7 +523,7 @@ class RenderExportStorageTests(unittest.TestCase):
             return video_export.export_video(video, target, **kwargs)
 
         self.exporter.copier = fail_first
-        with patch("haizflow.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)):
+        with patch("beup.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)):
             self.assertTrue(self.exporter.start_batch())
         self.exporter.worker.join(timeout=10)
         self.exporter.poll()
@@ -544,7 +544,7 @@ class RenderExportStorageTests(unittest.TestCase):
         video_store.update_video(pending.video_id, status="paused")
         video_store.update_video(stale.video_id, watermark_text="changed")
         self.host._batch_video_ids = [ready.video_id, pending.video_id, stale.video_id]
-        with patch("haizflow.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)):
+        with patch("beup.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)):
             self.assertTrue(self.exporter.start_batch())
         self.exporter.worker.join(timeout=10)
         self.exporter.poll()
@@ -556,34 +556,34 @@ class RenderExportStorageTests(unittest.TestCase):
         _, video = self.make_video(kind="batch")
         video_store.update_video(video.video_id, status="pending")
         self.host._batch_video_ids = [video.video_id]
-        with patch("haizflow.desktop.video_export_controller.QFileDialog.getExistingDirectory") as choose:
+        with patch("beup.desktop.video_export_controller.QFileDialog.getExistingDirectory") as choose:
             self.assertFalse(self.exporter.start_batch())
         choose.assert_not_called()
 
     def test_batch_destination_replacement_requires_confirmation(self):
-        from haizflow.desktop.localization import QMessageBox
+        from beup.desktop.localization import QMessageBox
 
         _, video = self.make_video(kind="batch")
         self.host._batch_video_ids = [video.video_id]
         target = self.external / video_export.batch_filename(video)
         target.write_bytes(b"existing-export")
-        with patch("haizflow.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)), \
-             patch("haizflow.desktop.video_export_controller.QMessageBox.question", return_value=QMessageBox.StandardButton.No) as confirm:
+        with patch("beup.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)), \
+             patch("beup.desktop.video_export_controller.QMessageBox.question", return_value=QMessageBox.StandardButton.No) as confirm:
             self.assertEqual(self.exporter.choose_batch_directory(), "")
         confirm.assert_called_once()
         self.assertNotIn(str(target), self.exporter._chosen_targets)
         self.assertEqual(target.read_bytes(), b"existing-export")
 
     def test_batch_destination_approval_captures_identity_before_processing(self):
-        from haizflow.desktop.localization import QMessageBox
+        from beup.desktop.localization import QMessageBox
 
         _, video = self.make_video(kind="batch")
         self.host._batch_video_ids = [video.video_id]
         target = self.external / video_export.batch_filename(video)
         target.write_bytes(b"existing-export")
         identity = video_export.destination_identity(target)
-        with patch("haizflow.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)), \
-             patch("haizflow.desktop.video_export_controller.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+        with patch("beup.desktop.video_export_controller.QFileDialog.getExistingDirectory", return_value=str(self.external)), \
+             patch("beup.desktop.video_export_controller.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
             self.assertEqual(self.exporter.choose_batch_directory(), str(self.external.resolve()))
         self.assertEqual(self.exporter._chosen_targets[str(target)], identity)
         self.assertEqual(target.read_bytes(), b"existing-export")
@@ -592,7 +592,7 @@ class RenderExportStorageTests(unittest.TestCase):
         _, video = self.make_video()
         self.host._selected_video_id = video.video_id
         target = self.external / "processed.mp4"
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True) as process:
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True) as process:
             self.assertTrue(self.exporter.start(video.video_id, "720p", str(target), process=True))
         process.assert_called_once_with(video.video_id)
         self.assertEqual(video_store.get_video(video.video_id).export_preset, "720p")
@@ -604,7 +604,7 @@ class RenderExportStorageTests(unittest.TestCase):
         project, video = self.make_video(kind="batch")
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [video.video_id]
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
             self.assertFalse(self.exporter.start_batch_to("another-project", [video.video_id], "720p", str(self.external)))
             self.assertFalse(self.exporter.start_batch_to(project["key"], [video.video_id], "720p", str(self.external / "missing")))
             self.host._enqueue_videos.assert_not_called()
@@ -619,7 +619,7 @@ class RenderExportStorageTests(unittest.TestCase):
         project, video = self.make_video(kind="batch")
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [video.video_id]
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=False):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=False):
             self.assertFalse(self.exporter.start_batch_to(project["key"], [video.video_id], "720p", str(self.external)))
         self.assertEqual(video_store.get_video(video.video_id).export_preset, "source")
         self.assertEqual(video_store.get_video(video.video_id).status, "done")
@@ -633,7 +633,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [first.video_id, second.video_id]
         old_render = Path(first.files["final_video"])
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True), \
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True), \
              patch.object(manual_artifacts, "has_runtime_pins", side_effect=lambda key: key == second.video_id):
             self.assertFalse(self.exporter.start_batch_to(project["key"], self.host._batch_video_ids, "source", str(self.external)))
         self.assertTrue(old_render.exists())
@@ -650,7 +650,7 @@ class RenderExportStorageTests(unittest.TestCase):
         video_store.update_video(video.video_id, status="paused", resume_step="creating_voice", processing_elapsed_seconds=130)
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [video.video_id]
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
             self.assertTrue(self.exporter.start_batch_to(project["key"], self.host._batch_video_ids, "source", str(self.external)))
         fresh = video_store.get_video(video.video_id)
         self.assertEqual(fresh.checkpoints, {})
@@ -668,7 +668,7 @@ class RenderExportStorageTests(unittest.TestCase):
         _, first = self.make_video()
         _, second = self.make_video(name="Second")
         self.host._selected_video_id = first.video_id
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True):
             self.assertTrue(self.exporter.start(first.video_id, "source", str(self.external / "first.mp4"), process=True))
         video_store.update_video(first.video_id, status="paused")
         self.exporter.poll()
@@ -684,7 +684,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertEqual((self.external / "first.mp4").read_bytes(), b"managed-render")
 
     def test_batch_default_is_stable_when_most_videos_are_customized(self):
-        from haizflow.services import batch_settings
+        from beup.services import batch_settings
         project, video = self.make_video(kind="batch")
         original = batch_settings.stable_values(project["key"], {}, [video])
         video = video_store.update_video(video.video_id, target_language="en", background_music_loop=False)
@@ -696,7 +696,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertEqual(renamed["batch_settings"]["values"], original)
 
     def test_batch_assets_compare_content_not_same_size_or_copied_path(self):
-        from haizflow.services import batch_settings
+        from beup.services import batch_settings
         project, _video = self.make_video(kind="batch")
         first = self.external / "first.wav"
         second = self.external / "second.wav"
@@ -709,7 +709,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertEqual(Path(staged).read_bytes(), b"same-size-A")
 
     def test_batch_config_includes_gemini_music_and_watermark_settings(self):
-        from haizflow.services import batch_settings
+        from beup.services import batch_settings
         config = batch_settings.config_for({
             "translationModel": "gemini-3.1-flash-lite", "backgroundMusicLoop": False,
             "audioDuckingEnabled": True, "audioDuckingReductionDb": -18,
@@ -728,8 +728,8 @@ class RenderExportStorageTests(unittest.TestCase):
             batch_settings.config_for({"ttsVoice": "omnivoice:clone"})
 
     def test_shared_batch_apply_preserves_private_video_until_explicit_replace(self):
-        from haizflow.desktop.project_commands_controller import ProjectCommandsController
-        from haizflow.services import batch_settings
+        from beup.desktop.project_commands_controller import ProjectCommandsController
+        from beup.services import batch_settings
         project, first = self.make_video(kind="batch")
         config = VideoConfig(project_type="batch", project_key=project["key"],
                              project_id=project["project_id"], project_name=project["project_name"],
@@ -770,7 +770,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertFalse(command.apply_batch_settings_values("wrong-owner", changed, True))
 
     def test_batch_cpu_mode_rejects_gpu_choices_before_any_settings_write(self):
-        from haizflow.desktop.project_commands_controller import ProjectCommandsController
+        from beup.desktop.project_commands_controller import ProjectCommandsController
         project, video = self.make_video(kind="batch")
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [video.video_id]
@@ -789,8 +789,8 @@ class RenderExportStorageTests(unittest.TestCase):
         self.assertEqual(self.host._show_app_alert.call_count, 3)
 
     def test_failed_batch_settings_commit_keeps_completed_render_and_checkpoint_intact(self):
-        from haizflow.desktop.project_commands_controller import ProjectCommandsController
-        from haizflow.desktop.qml_controller import HaizFlowController
+        from beup.desktop.project_commands_controller import ProjectCommandsController
+        from beup.desktop.qml_controller import BeUpController
 
         project, video = self.make_video(kind="batch")
         self.host._selected_project_key = project["key"]
@@ -798,14 +798,14 @@ class RenderExportStorageTests(unittest.TestCase):
         self.host._settings_processing_device = "cpu"
         self.host._normalized_tts_provider = lambda language, provider: provider
         self.host._normalized_voice_for_language = lambda language, voice, provider: voice
-        self.host._video_settings_snapshot = HaizFlowController._video_settings_snapshot
-        self.host._video_config_from_snapshot = HaizFlowController._video_config_from_snapshot
-        self.host._apply_config_to_video = lambda value, config: HaizFlowController._apply_config_to_video(
+        self.host._video_settings_snapshot = BeUpController._video_settings_snapshot
+        self.host._video_config_from_snapshot = BeUpController._video_config_from_snapshot
+        self.host._apply_config_to_video = lambda value, config: BeUpController._apply_config_to_video(
             self.host, value, config)
         self.host._preserve_edit_asset = lambda identifier, path: path
-        self.host._capture_video_asset_snapshot = lambda value, **kwargs: HaizFlowController._capture_video_asset_snapshot(
+        self.host._capture_video_asset_snapshot = lambda value, **kwargs: BeUpController._capture_video_asset_snapshot(
             self.host, value, **kwargs)
-        self.host._restore_video_asset_snapshot = lambda identifier, snapshot: HaizFlowController._restore_video_asset_snapshot(
+        self.host._restore_video_asset_snapshot = lambda identifier, snapshot: BeUpController._restore_video_asset_snapshot(
             self.host, identifier, snapshot)
         self.host._show_app_alert = Mock()
         self.host._record_batch_asset_change = Mock()
@@ -855,7 +855,7 @@ class RenderExportStorageTests(unittest.TestCase):
                 self.assertEqual(saved["batch_settings"]["values"], {"originalVolume": 60})
 
     def test_batch_invalid_subtitle_style_does_not_partially_apply_or_replace_overrides(self):
-        from haizflow.desktop.project_commands_controller import ProjectCommandsController
+        from beup.desktop.project_commands_controller import ProjectCommandsController
         project, video = self.make_video(kind="batch")
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [video.video_id]
@@ -879,7 +879,7 @@ class RenderExportStorageTests(unittest.TestCase):
         second = video_store.create_video(str(uuid.uuid4()), "second.mp4", config)
         self.host._selected_project_key = project["key"]
         self.host._batch_video_ids = [first.video_id, second.video_id]
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
             self.assertTrue(self.exporter.start_batch_to(project["key"], self.host._batch_video_ids, "source", str(self.external)))
         first = video_store.get_video(first.video_id)
         self.assertEqual(first.checkpoints, {})
@@ -915,7 +915,7 @@ class RenderExportStorageTests(unittest.TestCase):
         self.host._batch_video_ids = [first.video_id, second.video_id]
         alerts = []
         self.host.appAlertRequested.connect(lambda *args: alerts.append(args))
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True):
             self.assertTrue(self.exporter.start_batch_to(project["key"], self.host._batch_video_ids, "source", str(self.external)))
         video_store.update_video(first.video_id, status="failed", error="HY-MT2: example failure", progress=35)
         video_store.update_video(second.video_id, status="paused")
@@ -960,7 +960,7 @@ class RenderExportStorageTests(unittest.TestCase):
         alerts = []
         self.host.appAlertRequested.connect(lambda *args: alerts.append(args))
         # The copy fixture deliberately does not emulate inference or codecs.
-        with patch("haizflow.desktop.video_export_controller.current_render", return_value={"valid": True}):
+        with patch("beup.desktop.video_export_controller.current_render", return_value={"valid": True}):
             self.exporter.launch(jobs)
             self.exporter.worker.join(timeout=10)
             self.exporter.poll()
@@ -982,7 +982,7 @@ class RenderExportStorageTests(unittest.TestCase):
             if identifier == first.video_id:
                 raise PermissionError("WinError 32: synthetic locked file")
             return prepare(identifier)
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True), \
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController._resources_ready_for_videos", return_value=True), \
                 patch.object(video_store, "prepare_video_restart", side_effect=prepare_with_one_failure):
             self.assertTrue(self.exporter.start_batch_to(project["key"], self.host._batch_video_ids, "source", str(self.external)))
         self.host._enqueue_videos.assert_called_once_with([second.video_id])
@@ -995,7 +995,7 @@ class RenderExportStorageTests(unittest.TestCase):
         _, video = self.make_video()
         self.host._selected_video_id = video.video_id
         target = self.external / "paused.mp4"
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True):
             self.assertTrue(self.exporter.start(video.video_id, "source", str(target), process=True))
         video_store.update_video(video.video_id, status="paused")
         self.exporter.poll()
@@ -1013,7 +1013,7 @@ class RenderExportStorageTests(unittest.TestCase):
         _, video = self.make_video()
         self.host._selected_video_id = video.video_id
         target = self.external / "cancelled.mp4"
-        with patch("haizflow.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True):
+        with patch("beup.desktop.project_commands_controller.ProjectCommandsController.process_for_export", return_value=True):
             self.assertTrue(self.exporter.start(video.video_id, "source", str(target), process=True))
         video_store.update_video(video.video_id, status="paused")
         self.exporter.poll()
@@ -1154,4 +1154,4 @@ class RenderExportStorageTests(unittest.TestCase):
         finally:
             kernel.CloseHandle(handle)
         self.assertEqual(target.read_bytes(), b"old-video")
-        self.assertEqual(list(self.external.glob(".haizflow-export-*")), [])
+        self.assertEqual(list(self.external.glob(".beup-export-*")), [])

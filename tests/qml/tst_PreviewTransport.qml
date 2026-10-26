@@ -1,6 +1,6 @@
 import QtQuick
 import QtTest
-import "../../src/haizflow/desktop/qml"
+import "../../src/beup/desktop/qml"
 
 Item {
     id: root

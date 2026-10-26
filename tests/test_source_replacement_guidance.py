@@ -6,10 +6,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.desktop.project_import_controller import ProjectImportController
-from haizflow.desktop.project_workspace_controller import ProjectWorkspaceController
-from haizflow.schemas.video import VideoConfig
-from haizflow.services import project_store, video_store
+from beup.desktop.project_import_controller import ProjectImportController
+from beup.desktop.project_workspace_controller import ProjectWorkspaceController
+from beup.schemas.video import VideoConfig
+from beup.services import project_store, video_store
 
 
 @pytest.fixture

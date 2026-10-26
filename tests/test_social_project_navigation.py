@@ -7,11 +7,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from haizflow.desktop.project_import_controller import ProjectImportController
-from haizflow.desktop.project_workspace_controller import ProjectWorkspaceController
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.desktop.social_publish_controller import SocialPublishController
-from haizflow.services import project_store, social_publish
+from beup.desktop.project_import_controller import ProjectImportController
+from beup.desktop.project_workspace_controller import ProjectWorkspaceController
+from beup.desktop.qml_controller import BeUpController
+from beup.desktop.social_publish_controller import SocialPublishController
+from beup.services import project_store, social_publish
 
 
 class Items:
@@ -56,8 +56,8 @@ def workspace(tmp_path, monkeypatch):
     host._open_project_summary = controller.open_project_summary
     importer = ProjectImportController(host)
     monkeypatch.setattr(importer, "_reset_new_project_setup", Mock())
-    monkeypatch.setattr("haizflow.services.desktop_settings.save_settings", Mock())
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.QMessageBox.information", Mock())
+    monkeypatch.setattr("beup.services.desktop_settings.save_settings", Mock())
+    monkeypatch.setattr("beup.desktop.social_publish_controller.QMessageBox.information", Mock())
     yield host, publisher, project, importer
     publisher.shutdown()
 
@@ -80,7 +80,7 @@ def test_busy_social_task_does_not_block_opening_unrelated_projects(workspace, p
     project["videos"] = []
     host.prepareChannelImport = Mock()
     publisher._busy = True
-    assert HaizFlowController._select_project_summary(host, project)
+    assert BeUpController._select_project_summary(host, project)
     host.appAlertRequested.emit.assert_not_called()
     assert host._selected_project_key == project["key"]
     assert publisher._project_key == owner["key"]
@@ -92,7 +92,7 @@ def test_other_publishing_project_still_cannot_steal_the_active_worker(workspace
     other = project_store.create_project("Other posting", str(tmp_path), "publish")
     other["videos"] = []
     publisher._busy = True
-    assert not HaizFlowController._select_project_summary(host, other)
+    assert not BeUpController._select_project_summary(host, other)
     assert not importer.prepare_project("New posting", str(tmp_path), "publish")
     assert publisher._project_key == host._selected_project_key == owner["key"]
 
@@ -105,7 +105,7 @@ def test_returning_to_active_owner_preserves_worker_account_and_consent(workspac
     publisher._worker = worker = Mock()
     assert importer.prepare_project("Independent", str(tmp_path), "manual")
     owner["videos"] = []
-    assert HaizFlowController._select_project_summary(host, owner)
+    assert BeUpController._select_project_summary(host, owner)
     assert publisher._worker is worker and publisher.busy
     assert publisher._consent_confirmed
     assert publisher._account_generation == 7 and publisher._creator_generation == 9
@@ -120,9 +120,9 @@ def test_import_finishes_in_its_owner_after_navigation_and_can_be_reopened(works
         started.set()
         assert release.wait(5)
         return 10.0
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.get_video_duration", duration)
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.get_video_dimensions", lambda *_a, **_k: (1080, 1920))
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.create_video_thumbnail_path", Mock())
+    monkeypatch.setattr("beup.desktop.social_publish_controller.get_video_duration", duration)
+    monkeypatch.setattr("beup.desktop.social_publish_controller.get_video_dimensions", lambda *_a, **_k: (1080, 1920))
+    monkeypatch.setattr("beup.desktop.social_publish_controller.create_video_thumbnail_path", Mock())
     assert publisher.add_videos([str(source)])
     worker = publisher._import_thread
     try:
@@ -139,7 +139,7 @@ def test_import_finishes_in_its_owner_after_navigation_and_can_be_reopened(works
         assert len(items) == 1 and Path(items[0]["file_path"]).read_bytes() == b"original source"
         assert not social_publish.load_state(project_store.project_root_for_key(independent))["items"]
         owner["videos"] = []
-        assert HaizFlowController._select_project_summary(host, owner)
+        assert BeUpController._select_project_summary(host, owner)
         assert publisher.count == 1 and publisher._project_key == owner["key"]
         assert not list(Path(owner["project_root"]).rglob("*.part"))
     finally:
@@ -293,9 +293,9 @@ def test_import_during_upload_does_not_replace_worker_cancel_or_consent(workspac
     active_worker = publisher._worker = Mock()
     source = tmp_path / "new.mp4"
     source.write_bytes(b"new source")
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.get_video_duration", lambda *_a, **_k: 10.0)
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.get_video_dimensions", lambda *_a, **_k: (1080, 1920))
-    monkeypatch.setattr("haizflow.desktop.social_publish_controller.create_video_thumbnail_path", Mock())
+    monkeypatch.setattr("beup.desktop.social_publish_controller.get_video_duration", lambda *_a, **_k: 10.0)
+    monkeypatch.setattr("beup.desktop.social_publish_controller.get_video_dimensions", lambda *_a, **_k: (1080, 1920))
+    monkeypatch.setattr("beup.desktop.social_publish_controller.create_video_thumbnail_path", Mock())
     assert publisher.add_videos([str(source)])
     assert not publisher.add_videos([str(source)])  # one import worker at a time
     assert publisher._worker is active_worker and publisher.import_busy

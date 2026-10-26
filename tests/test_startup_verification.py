@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from haizflow.update.filesystem import UpdateError
-from haizflow.update.manifest import Manifest, inventory
+from beup.update.filesystem import UpdateError
+from beup.update.manifest import Manifest, inventory
 
 
 def test_parallel_inventory_matches_serial_and_ignores_only_reserved_metadata(tmp_path):
@@ -43,7 +43,7 @@ def test_hash_reads_overlap_but_never_exceed_four_workers(tmp_path):
             with lock:
                 active -= 1
 
-    with patch("haizflow.update.manifest.sha256", side_effect=hash_file) as hashed:
+    with patch("beup.update.manifest.sha256", side_effect=hash_file) as hashed:
         result = inventory(tmp_path, hash_workers=100)
     assert len(result) == hashed.call_count == 32
     assert peak == 4
@@ -51,14 +51,14 @@ def test_hash_reads_overlap_but_never_exceed_four_workers(tmp_path):
 
 def test_parallel_hash_failure_is_not_swallowed(tmp_path):
     (tmp_path / "file.dll").write_bytes(b"payload")
-    with patch("haizflow.update.manifest.sha256", side_effect=OSError("locked")):
+    with patch("beup.update.manifest.sha256", side_effect=OSError("locked")):
         with pytest.raises(OSError, match="locked"):
             inventory(tmp_path, hash_workers=4)
 
 
 @pytest.mark.parametrize("change", ["same_size", "missing", "extra"])
 def test_parallel_verification_still_rejects_changed_file_sets(tmp_path, change):
-    file = tmp_path / "HaizFlowCore.exe"
+    file = tmp_path / "BeUpCore.exe"
     file.write_bytes(b"original")
     manifest = Manifest({"target_files": inventory(tmp_path)})
     if change == "same_size":

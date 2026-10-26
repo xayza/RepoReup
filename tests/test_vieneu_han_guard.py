@@ -6,10 +6,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from haizflow.core.vieneu_voices import han_text_notice
-from haizflow.desktop.qml_controller import HaizFlowController
-from haizflow.pipeline import process_video, tts, vieneu_tts
-from haizflow.services.subtitle_import import voice_notice
+from beup.core.vieneu_voices import han_text_notice
+from beup.desktop.qml_controller import BeUpController
+from beup.pipeline import process_video, tts, vieneu_tts
+from beup.services.subtitle_import import voice_notice
 
 
 @pytest.mark.parametrize("han", ["王", "中", "〇", "\u3400", "\uf900", "\U00020000", "\U00030000", "\U000323b0"])
@@ -73,11 +73,11 @@ def test_ui_warns_on_every_attempt_and_allows_corrected_text():
     host = SimpleNamespace(_selected_video=lambda: video, _manual_subtitles=model,
                            _settings_language="vi", appAlertRequested=Mock())
     for provider in ("vieneu", "vieneu-gpu", "vieneu-gpu"):
-        assert not HaizFlowController.validateTtsProviderForLanguage(host, "vi", provider)
+        assert not BeUpController.validateTtsProviderForLanguage(host, "vi", provider)
     assert host.appAlertRequested.emit.call_count == 3
-    assert HaizFlowController.validateTtsProviderForLanguage(host, "vi", "omnivoice-gpu")
+    assert BeUpController.validateTtsProviderForLanguage(host, "vi", "omnivoice-gpu")
     model.segments = [{"text": "Cảm ơn Vương."}]
-    assert HaizFlowController.validateTtsProviderForLanguage(host, "vi", "vieneu-gpu")
+    assert BeUpController.validateTtsProviderForLanguage(host, "vi", "vieneu-gpu")
 
 
 @pytest.mark.parametrize("project_type", ["single", "batch"])
@@ -90,7 +90,7 @@ def test_cached_auto_voice_cannot_bypass_guard(tmp_path, project_type):
         tts_provider="vieneu-gpu", subtitle_style=None, files={"video_input": str(source),
         "transcript_json": str(transcript), "srt_output": str(tmp_path / "sub.srt"),
         "voice_output": str(tmp_path / "voice.wav")})
-    with (patch("haizflow.services.video_export.export_destination", return_value=tmp_path / "final.mp4"),
+    with (patch("beup.services.video_export.export_destination", return_value=tmp_path / "final.mp4"),
           patch.object(process_video, "check_cancellation"),
           patch.object(process_video, "_voice_checkpoint_signature", return_value="existing"),
           patch.object(process_video, "_checkpoint_valid", return_value=True) as checkpoint,

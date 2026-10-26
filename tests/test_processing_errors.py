@@ -1,6 +1,6 @@
 import pytest
 
-from haizflow.core.processing_errors import describe_failure
+from beup.core.processing_errors import describe_failure
 
 
 @pytest.mark.parametrize("error", [
